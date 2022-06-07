@@ -188,7 +188,7 @@ namespace SegHig.Migrations
 
                     b.HasIndex("ClienteTipoId");
 
-                    b.ToTable("Cliente");
+                    b.ToTable("Clientes");
                 });
 
             modelBuilder.Entity("SegHig.Data.Entities.ClienteTipo", b =>
@@ -248,7 +248,7 @@ namespace SegHig.Migrations
 
                     b.HasIndex("EmpresaTipoId");
 
-                    b.ToTable("Empresa");
+                    b.ToTable("Empresas");
                 });
 
             modelBuilder.Entity("SegHig.Data.Entities.EmpresaTipo", b =>

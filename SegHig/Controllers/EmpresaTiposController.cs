@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SegHig.Data;
 using SegHig.Data.Entities;
 
 namespace SegHig.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class EmpresaTiposController : Controller
     {
         private readonly DataContext _context;
@@ -46,8 +48,7 @@ namespace SegHig.Controllers
         }
 
         // POST: EmpresaTipos/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(EmpresaTipo empresaTipo)
@@ -62,9 +63,9 @@ namespace SegHig.Controllers
                 }
                 catch (DbUpdateException dbUpdateException)
                 {
-                    if (dbUpdateException.InnerException.Message.Contains("duplicate"))
+                    if (dbUpdateException.InnerException.Message.Contains("duplicada"))
                     {
-                        ModelState.AddModelError(string.Empty, "Ya existe un tipo de empresa con el mismo nombre.");
+                        ModelState.AddModelError(string.Empty, "Ya existe un Tipo de Empresa con el mismo nombre.");
                     }
                     else
                     {
@@ -115,9 +116,9 @@ namespace SegHig.Controllers
                 }
                 catch (DbUpdateException dbUpdateException)
                 {
-                    if (dbUpdateException.InnerException.Message.Contains("duplicate"))
+                    if (dbUpdateException.InnerException.Message.Contains("duplicada"))
                     {
-                        ModelState.AddModelError(string.Empty, "Ya existe un tipo de empresa con el mismo nombre.");
+                        ModelState.AddModelError(string.Empty, "Ya existe un Tipo de Empresa con el mismo nombre.");
                     }
                     else
                     {

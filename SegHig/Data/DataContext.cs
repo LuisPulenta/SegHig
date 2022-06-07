@@ -12,12 +12,15 @@ namespace SegHig.Data
 
         public DbSet<ClienteTipo> ClienteTipos { get; set; }
         public DbSet<EmpresaTipo> EmpresaTipos { get; set; }
+        public DbSet<Cliente> Clientes { get; set; }
+        public DbSet<Empresa> Empresas { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<ClienteTipo>().HasIndex(c => c.Name).IsUnique();
             modelBuilder.Entity<EmpresaTipo>().HasIndex(c => c.Name).IsUnique();
+            modelBuilder.Entity<Empresa>().HasIndex(c => c.Name).IsUnique();
         }
     }
 }

@@ -21,13 +21,13 @@ namespace SegHig.Data
             await CheckClienteTiposAsync();
             await CheckEmpresaTiposAsync();
             await CheckRolesAsync();
-            await CheckUserAsync("1010", "Luis", "Núñez", "luis@yopmail.com", "156 814 963", "Espora 2052", UserType.SuperAdmin);
+            await CheckUserAsync("1010", "Luis", "Núñez", "luis@yopmail.com", "156 814 963", "Espora 2052", UserType.Admin,true);
+            
 
         }
 
         private async Task CheckRolesAsync()
         {
-            await _userHelper.CheckRoleAsync(UserType.SuperAdmin.ToString());
             await _userHelper.CheckRoleAsync(UserType.Admin.ToString());
             await _userHelper.CheckRoleAsync(UserType.User.ToString());
         }
@@ -39,7 +39,8 @@ namespace SegHig.Data
         string email,
         string phone,
         string address,
-        UserType userType)
+        UserType userType,
+        bool active)
         {
             User user = await _userHelper.GetUserAsync(email);
             if (user == null)
@@ -54,10 +55,15 @@ namespace SegHig.Data
                     Address = address,
                     Document = document,
                     UserType = userType,
+                    Active=active,
                 };
 
                 await _userHelper.AddUserAsync(user, "123456");
                 await _userHelper.AddUserToRoleAsync(user, userType.ToString());
+
+                string token = await _userHelper.GenerateEmailConfirmationTokenAsync(user);
+                await _userHelper.ConfirmEmailAsync(user, token);
+
             }
 
             return user;
@@ -69,7 +75,7 @@ namespace SegHig.Data
             {
                 _context.ClienteTipos.Add(new ClienteTipo { Name = "Telefonía", Active=true });
                 _context.ClienteTipos.Add(new ClienteTipo { Name = "Cable", Active = true });
-                _context.ClienteTipos.Add(new ClienteTipo { Name = "ENergía", Active = true });
+                _context.ClienteTipos.Add(new ClienteTipo { Name = "Energía", Active = true });
             }
 
             await _context.SaveChangesAsync();

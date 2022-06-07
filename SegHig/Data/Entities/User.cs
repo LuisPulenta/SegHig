@@ -31,6 +31,7 @@ namespace SegHig.Data.Entities
 
         [Display(Name = "Empresa")]
         public Empresa Empresa { get; set; }
+        public bool Active { get; set; }
 
         [Display(Name = "Usuario")]
         public string FullName => $"{FirstName} {LastName}";
