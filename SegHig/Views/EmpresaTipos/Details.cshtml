@@ -1,0 +1,16 @@
+﻿@model SegHig.Data.Entities.EmpresaTipo
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<div>
+    <h4>Detalle de Tipo de Empresa</h4>
+    <hr />
+        <partial name=_EmpresaTipoDetails/>
+</div>
+<div>
+       <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-outline-warning btn-sm" >Editar</a>
+    <a asp-action="Index" class="btn btn-outline-success btn-sm">Regresar</a>
+
+</div>

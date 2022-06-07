@@ -1,0 +1,20 @@
+﻿@model SegHig.Data.Entities.ClienteTipo
+
+@{
+    ViewData["Title"] = "Delete";
+}
+
+<h1>Borrar Tipo de Cliente</h1>
+
+<h3>Está seguro de borrar este Tipo de Cliente?</h3>
+<div>
+    <h4>EmpresaTipo</h4>
+    <hr />
+       <partial name=_ClienteTipoDetails/>
+    
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Id" />
+        <input type="submit" value="Borrar" class="btn btn-outline-danger btn-sm" />
+        <a asp-action="Index" class="btn btn-outline-success btn-sm">Regresar</a>
+    </form>
+</div>

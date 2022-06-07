@@ -1,0 +1,26 @@
+﻿@model SegHig.Data.Entities.ClienteTipo
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h4>Crear Tipo de Empresa</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <partial name=_ClienteTipo/>
+            <div class="form-group">
+                                <input type="submit" value="Crear" class="btn btn-outline-primary btn-sm" />
+                <a asp-action="Index" class="btn btn-outline-success btn-sm">Regresar</a>
+
+            </div>
+        </form>
+    </div>
+                <br />
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
