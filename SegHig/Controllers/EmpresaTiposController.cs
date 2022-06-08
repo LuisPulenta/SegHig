@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SegHig.Data;
 using SegHig.Data.Entities;
+using Vereyon.Web;
 
 namespace SegHig.Controllers
 {
@@ -10,11 +11,12 @@ namespace SegHig.Controllers
     public class EmpresaTiposController : Controller
     {
         private readonly DataContext _context;
-        private object dbUpdateException;
+        private readonly IFlashMessage _flashMessage;
 
-        public EmpresaTiposController(DataContext context)
+        public EmpresaTiposController(DataContext context, IFlashMessage flashMessage)
         {
             _context = context;
+            _flashMessage = flashMessage;
         }
 
         // GET: EmpresaTipos

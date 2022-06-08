@@ -24,7 +24,7 @@ namespace SegHig.Models
 
         [Display(Name = "Activo")]
         public bool Active { get; set; }
-        [Display(Name = "Empresa")]
+        [Display(Name = "Tipo de Empresa")]
 
         [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un Tipo de Empresa.")]
         [Required(ErrorMessage = "El campo {0} es obligatorio.")]

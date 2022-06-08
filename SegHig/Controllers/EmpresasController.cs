@@ -5,6 +5,7 @@ using SegHig.Data;
 using SegHig.Data.Entities;
 using SegHig.Helpers;
 using SegHig.Models;
+using Vereyon.Web;
 
 namespace SegHig.Controllers
 {
@@ -13,12 +14,13 @@ namespace SegHig.Controllers
     {
         private readonly DataContext _context;
         private readonly ICombosHelper _combosHelper;
-        private object dbUpdateException;
+        private readonly IFlashMessage _flashMessage;
 
-        public EmpresasController(DataContext context,ICombosHelper combosHelper)
+        public EmpresasController(DataContext context,ICombosHelper combosHelper, IFlashMessage flashMessage)
         {
             _context = context;
             _combosHelper = combosHelper;
+            _flashMessage = flashMessage;
         }
 
         // GET: Empresas

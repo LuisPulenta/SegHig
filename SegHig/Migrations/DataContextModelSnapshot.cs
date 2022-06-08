@@ -174,6 +174,9 @@ namespace SegHig.Migrations
                     b.Property<int?>("ClienteTipoId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("EmpresaId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -187,6 +190,8 @@ namespace SegHig.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ClienteTipoId");
+
+                    b.HasIndex("EmpresaId");
 
                     b.ToTable("Clientes");
                 });
@@ -248,6 +253,9 @@ namespace SegHig.Migrations
 
                     b.HasIndex("EmpresaTipoId");
 
+                    b.HasIndex("Name")
+                        .IsUnique();
+
                     b.ToTable("Empresas");
                 });
 
@@ -287,6 +295,9 @@ namespace SegHig.Migrations
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
+
+                    b.Property<bool>("Active")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Address")
                         .IsRequired()
@@ -430,7 +441,13 @@ namespace SegHig.Migrations
                         .WithMany("Clientes")
                         .HasForeignKey("ClienteTipoId");
 
+                    b.HasOne("SegHig.Data.Entities.Empresa", "Empresa")
+                        .WithMany("Clientes")
+                        .HasForeignKey("EmpresaId");
+
                     b.Navigation("ClienteTipo");
+
+                    b.Navigation("Empresa");
                 });
 
             modelBuilder.Entity("SegHig.Data.Entities.Empresa", b =>
@@ -465,6 +482,8 @@ namespace SegHig.Migrations
 
             modelBuilder.Entity("SegHig.Data.Entities.Empresa", b =>
                 {
+                    b.Navigation("Clientes");
+
                     b.Navigation("EmpresaTipos");
 
                     b.Navigation("Users");

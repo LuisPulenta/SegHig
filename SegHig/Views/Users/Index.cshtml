@@ -4,17 +4,18 @@
     ViewData["Title"] = "Index";
 }
 
+<flash dismissable="true" />
 <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" />
 
 <p>
     <a asp-action="Create" class="btn btn-outline-primary">Nuevo Administrador</a>
 </p>
-<div class="row">
+    <div class="row">
     <div class="col-md-12">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">Administradores</h3>
-            </div>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Administradores</h3>
+                </div>
             <div class="panel-body">
                 <table class="table table-hover table-responsive table-striped" id="MyTable">
                     <thead>
@@ -44,6 +45,7 @@
                             <th>
                                 Activo
                             </th>
+                            <th></th>
 
                            
                         </tr>
@@ -78,7 +80,23 @@
                                 <td>
                                     @Html.DisplayFor(modelItem => item.Active)
                                 </td>
+                                
+           <td>
+                                    
+                                   <a asp-action="EditUser" asp-route-id="@item.Id" class="btn btn-outline-warning"><i class="fa-solid fa-pen-to-square"></i></a>
+                
+                                    @if (!item.Active)
+                                    {
+                                        <a asp-action="OnOff" asp-route-id="@item.Id" class="btn btn-outline-success"><i class="fa-solid fa-toggle-on"></i></a>
+                                    }
 
+                                    @if (item.Active)
+                                    {
+                                        <a asp-action="OnOff" asp-route-id="@item.Id" class="btn btn-outline-secondary"><i class="fa-solid fa-toggle-off"></i></a>
+                                    }
+
+                                    <a asp-action="DeleteUser" asp-route-id="@item.Id" class="btn btn-outline-danger"><i class="fa-solid fa-trash"></i></a>
+            </td>
                             </tr>
                         }
                     </tbody>

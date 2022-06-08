@@ -24,6 +24,7 @@ namespace SegHig.Data.Entities
 
         [Display(Name = "Tipo de Cliente")]
         public ClienteTipo ClienteTipo { get; set; }
+        public Empresa Empresa { get; set; }
 
         [Display(Name = "Activo")]
         public bool Active { get; set; }

@@ -7,6 +7,7 @@ using SegHig.Data.Entities;
 using SegHig.Enums;
 using SegHig.Helpers;
 using SegHig.Models;
+using Vereyon.Web;
 
 namespace Shooping.Controllers
 {
@@ -17,13 +18,15 @@ namespace Shooping.Controllers
         private readonly IUserHelper _userHelper;
         private readonly ICombosHelper _combosHelper;
         private readonly IMailHelper _mailHelper;
+        private readonly IFlashMessage _flashMessage;
 
-        public UsersController(DataContext context, IUserHelper userHelper, ICombosHelper combosHelper, IMailHelper mailHelper)
+        public UsersController(DataContext context, IUserHelper userHelper, ICombosHelper combosHelper, IMailHelper mailHelper, IFlashMessage flashMessage)
         {
             _context = context;
             _userHelper = userHelper;
             _combosHelper = combosHelper;
             _mailHelper = mailHelper;
+            _flashMessage = flashMessage;
         }
 
         public async Task<IActionResult> Index()
@@ -74,7 +77,7 @@ namespace Shooping.Controllers
                     $"{model.FirstName} {model.LastName}",
                     model.Username,
                     "SegHig - Confirmación de cuenta",
-                    $"<h1>Shopping - Confirmación de cuenta</h1>" +
+                    $"<h1>SegHig - Confirmación de cuenta</h1>" +
                     $"Para habilitar el usuario, por favor hacer clic en el siguiente enlace: " +
                     $"</hr></br><p><a href = \"{tokenLink}\">Confirmar Email</a></p>");
                 if (response.IsSuccess)
@@ -90,6 +93,103 @@ namespace Shooping.Controllers
             model.UserType = UserType.Admin;
             model.Empresas = await _combosHelper.GetComboEmpresasAsync();
             return View(model);
+        }
+
+        public async Task<IActionResult> EditUser(string id)
+        {
+            User user = await _userHelper.GetUserByIdAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            EditUserViewModel model = new()
+            {
+                Address = user.Address,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                PhoneNumber = user.PhoneNumber,
+                Empresas = await _combosHelper.GetComboEmpresasAsync(),
+                EmpresaId = user.Empresa.Id,
+                Id = user.Id,
+                Document = user.Document,
+                Active = user.Active
+            };
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditUser(EditUserViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                User user = await _userHelper.GetUserByIdAsync(model.Id);
+                user.FirstName = model.FirstName;
+                user.LastName = model.LastName;
+                user.Address = model.Address;
+                user.PhoneNumber = model.PhoneNumber;
+                user.Empresa = await _context.Empresas.FindAsync(model.EmpresaId);
+                user.Document = model.Document;
+                user.Active = model.Active;
+
+                await _userHelper.UpdateUserAsync(user);
+                return RedirectToAction("Index", "Users");
+            }
+
+            model.Empresas = await _combosHelper.GetComboEmpresasAsync();
+            return View(model);
+        }
+
+        public async Task<IActionResult> OnOff(string id)
+        {
+            User user = await _userHelper.GetUserByIdAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            user.Active = !user.Active;
+
+            await _userHelper.UpdateUserAsync(user);
+            return RedirectToAction("Index", "Users");
+        }
+
+        public async Task<IActionResult> DeleteUser(string? id)
+        {
+            if (id == null || _context.Users == null)
+            {
+                return NotFound();
+            }
+
+            var user = await _context.Users
+                .Include(e => e.Empresa)
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            return View(user);
+        }
+
+        // POST: ClienteTipos/Delete/5
+        [HttpPost, ActionName("DeleteUser")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(string id)
+        {
+            if (_context.Users == null)
+            {
+                return Problem("Entity set 'DataContext.Users'  is null.");
+            }
+            var user = await _context.Users.FirstOrDefaultAsync(m => m.Id == id);
+            if (user != null)
+            {
+                _context.Users.Remove(user);
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
         }
     }
 }

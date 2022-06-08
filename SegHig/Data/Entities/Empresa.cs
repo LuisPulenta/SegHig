@@ -27,7 +27,10 @@ namespace SegHig.Data.Entities
 
         [Display(Name = "Activo")]
         public bool Active { get; set; }
+        
+        [Display(Name = "Usuario Alta")]
         public ICollection<User> Users { get; set; }
         public ICollection<EmpresaTipo> EmpresaTipos { get; set; }
+        public ICollection<Cliente> Clientes { get; set; }
     }
 }
