@@ -61,7 +61,7 @@ namespace Shooping.Controllers
                 User user = await _userHelper.AddUserAsync(model);
                 if (user == null)
                 {
-                    ModelState.AddModelError(string.Empty, "Este correo ya está siendo usado por otro usuario.");
+                    _flashMessage.Danger( "Este correo ya está siendo usado por otro usuario.");
                     model.UserType = UserType.Admin;
                     model.Empresas = await _combosHelper.GetComboEmpresasAsync();
                     return View(model);
@@ -82,7 +82,7 @@ namespace Shooping.Controllers
                     $"</hr></br><p><a href = \"{tokenLink}\">Confirmar Email</a></p>");
                 if (response.IsSuccess)
                 {
-                    ViewBag.Message = "Las instrucciones para habilitar el Administrador han sido enviadas al correo.";
+                    _flashMessage.Info( "Las instrucciones para habilitar el Administrador han sido enviadas al correo.");
                     return View(model);
                 }
 
@@ -134,6 +134,7 @@ namespace Shooping.Controllers
                 user.Active = model.Active;
 
                 await _userHelper.UpdateUserAsync(user);
+                _flashMessage.Info("Administrador actualizado.");
                 return RedirectToAction("Index", "Users");
             }
 
@@ -189,6 +190,7 @@ namespace Shooping.Controllers
             }
 
             await _context.SaveChangesAsync();
+            _flashMessage.Info("Administrador borrado.");
             return RedirectToAction(nameof(Index));
         }
     }

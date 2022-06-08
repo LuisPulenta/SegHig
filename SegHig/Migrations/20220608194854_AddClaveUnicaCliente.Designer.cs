@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SegHig.Data;
 
@@ -11,9 +12,10 @@ using SegHig.Data;
 namespace SegHig.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20220608194854_AddClaveUnicaCliente")]
+    partial class AddClaveUnicaCliente
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -292,96 +294,6 @@ namespace SegHig.Migrations
                     b.ToTable("EmpresaTipos");
                 });
 
-            modelBuilder.Entity("SegHig.Data.Entities.Formulario", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<bool>("Active")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<int?>("TrabajoTipoId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TrabajoTipoId");
-
-                    b.HasIndex("Name", "TrabajoTipoId")
-                        .IsUnique()
-                        .HasFilter("[TrabajoTipoId] IS NOT NULL");
-
-                    b.ToTable("Formularios");
-                });
-
-            modelBuilder.Entity("SegHig.Data.Entities.FormularioDetalle", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<bool>("Active")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
-
-                    b.Property<int?>("FormularioId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FormularioId");
-
-                    b.HasIndex("Description", "FormularioId")
-                        .IsUnique()
-                        .HasFilter("[FormularioId] IS NOT NULL");
-
-                    b.ToTable("FormularioDetalles");
-                });
-
-            modelBuilder.Entity("SegHig.Data.Entities.TrabajoTipo", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<bool>("Active")
-                        .HasColumnType("bit");
-
-                    b.Property<int?>("ClienteId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ClienteId");
-
-                    b.HasIndex("Name", "ClienteId")
-                        .IsUnique()
-                        .HasFilter("[ClienteId] IS NOT NULL");
-
-                    b.ToTable("TrabajoTipos");
-                });
-
             modelBuilder.Entity("SegHig.Data.Entities.User", b =>
                 {
                     b.Property<string>("Id")
@@ -560,33 +472,6 @@ namespace SegHig.Migrations
                         .HasForeignKey("EmpresaId");
                 });
 
-            modelBuilder.Entity("SegHig.Data.Entities.Formulario", b =>
-                {
-                    b.HasOne("SegHig.Data.Entities.TrabajoTipo", "TrabajoTipo")
-                        .WithMany("Formularios")
-                        .HasForeignKey("TrabajoTipoId");
-
-                    b.Navigation("TrabajoTipo");
-                });
-
-            modelBuilder.Entity("SegHig.Data.Entities.FormularioDetalle", b =>
-                {
-                    b.HasOne("SegHig.Data.Entities.Formulario", "Formulario")
-                        .WithMany("FormularioDetalles")
-                        .HasForeignKey("FormularioId");
-
-                    b.Navigation("Formulario");
-                });
-
-            modelBuilder.Entity("SegHig.Data.Entities.TrabajoTipo", b =>
-                {
-                    b.HasOne("SegHig.Data.Entities.Cliente", "Cliente")
-                        .WithMany("TrabajoTipos")
-                        .HasForeignKey("ClienteId");
-
-                    b.Navigation("Cliente");
-                });
-
             modelBuilder.Entity("SegHig.Data.Entities.User", b =>
                 {
                     b.HasOne("SegHig.Data.Entities.Empresa", "Empresa")
@@ -594,11 +479,6 @@ namespace SegHig.Migrations
                         .HasForeignKey("EmpresaId");
 
                     b.Navigation("Empresa");
-                });
-
-            modelBuilder.Entity("SegHig.Data.Entities.Cliente", b =>
-                {
-                    b.Navigation("TrabajoTipos");
                 });
 
             modelBuilder.Entity("SegHig.Data.Entities.ClienteTipo", b =>
@@ -613,16 +493,6 @@ namespace SegHig.Migrations
                     b.Navigation("EmpresaTipos");
 
                     b.Navigation("Users");
-                });
-
-            modelBuilder.Entity("SegHig.Data.Entities.Formulario", b =>
-                {
-                    b.Navigation("FormularioDetalles");
-                });
-
-            modelBuilder.Entity("SegHig.Data.Entities.TrabajoTipo", b =>
-                {
-                    b.Navigation("Formularios");
                 });
 #pragma warning restore 612, 618
         }

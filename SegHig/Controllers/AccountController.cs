@@ -59,15 +59,15 @@ namespace SegHig.Controllers
 
                 if (result.IsLockedOut)
                 {
-                    ModelState.AddModelError(string.Empty, "Ha superado el máximo número de intentos, su cuenta está bloqueada, intente de nuevo en 5 minutos.");
+                    _flashMessage.Danger( "Ha superado el máximo número de intentos, su cuenta está bloqueada, intente de nuevo en 5 minutos.");
                 }
                 else if (result.IsNotAllowed)
                 {
-                    ModelState.AddModelError(string.Empty, "El usuario no ha sido habilitado, debes de seguir las instrucciones del correo enviado para poder habilitar el usuario.");
+                    _flashMessage.Danger( "El usuario no ha sido habilitado, debes de seguir las instrucciones del correo enviado para poder habilitar el usuario.");
                 }
                 else
                 {
-                    ModelState.AddModelError(string.Empty, "Email o contraseña incorrectos.");
+                    _flashMessage.Danger( "Email o contraseña incorrectos.");
                 }
 
             }
@@ -111,7 +111,7 @@ namespace SegHig.Controllers
                 User user = await _userHelper.AddUserAsync(model);
                 if (user == null)
                 {
-                    ModelState.AddModelError(string.Empty, "Este correo ya está siendo usado por otro usuario.");
+                    _flashMessage.Danger( "Este correo ya está siendo usado por otro usuario.");
                     model.Empresas = await _combosHelper.GetComboEmpresasAsync();
                     model.UserType = UserType.User;
                     model.Active = true;
@@ -148,10 +148,10 @@ namespace SegHig.Controllers
                     $"</hr></br><p><a href = \"{tokenLink}\">Confirmar Email</a></p>");
                 if (response.IsSuccess)
                 {
-                    ViewBag.Message = "Las instrucciones para habilitar su cuenta han sido enviadas al correo.";
+                    _flashMessage.Info( "Las instrucciones para habilitar su cuenta han sido enviadas al correo.");
                     return View(model);
                 }
-                ModelState.AddModelError(string.Empty, response.Message);
+                _flashMessage.Danger( response.Message);
 
             }
             model.Empresas = await _combosHelper.GetComboEmpresasAsync();
@@ -198,6 +198,7 @@ namespace SegHig.Controllers
                 user.Active = model.Active;
 
                 await _userHelper.UpdateUserAsync(user);
+                _flashMessage.Info("Usuario actualizado.");
                 return RedirectToAction("Index", "Home");
             }
 
@@ -299,6 +300,7 @@ namespace SegHig.Controllers
             }
 
             await _context.SaveChangesAsync();
+            _flashMessage.Info("Usuario borrado.");
             return RedirectToAction(nameof(Index));
         }
 
@@ -316,7 +318,7 @@ namespace SegHig.Controllers
 
                 if (model.OldPassword == model.NewPassword)
                 {
-                    ModelState.AddModelError(string.Empty, "Debes ingresar una contraseña diferente a la actual");
+                    _flashMessage.Danger( "Debes ingresar una contraseña diferente a la actual");
                     return View(model);
                 }
 
@@ -330,12 +332,12 @@ namespace SegHig.Controllers
                     }
                     else
                     {
-                        ModelState.AddModelError(string.Empty, "Password incorrecto");
+                        _flashMessage.Danger( "Password incorrecto");
                     }
                 }
                 else
                 {
-                    ModelState.AddModelError(string.Empty, "User no found.");
+                    _flashMessage.Danger( "User no found.");
                 }
             }
 
@@ -374,7 +376,7 @@ namespace SegHig.Controllers
                 User user = await _userHelper.GetUserAsync(model.Email);
                 if (user == null)
                 {
-                    ModelState.AddModelError(string.Empty, "El email no corresponde a ningún usuario registrado.");
+                    _flashMessage.Danger( "El email no corresponde a ningún usuario registrado.");
                     return View(model);
                 }
 
@@ -390,7 +392,7 @@ namespace SegHig.Controllers
                     $"<h1>SegHig - Recuperación de Contraseña</h1>" +
                     $"Para recuperar la contraseña haga clic en el siguiente enlace:" +
                     $"<p><a href = \"{link}\">Reset Password</a></p>");
-                ViewBag.Message = "Las instrucciones para recuperar la contraseña han sido enviadas a su correo.";
+                _flashMessage.Info( "Las instrucciones para recuperar la contraseña han sido enviadas a su correo.");
                 return View();
             }
 
@@ -411,15 +413,15 @@ namespace SegHig.Controllers
                 IdentityResult result = await _userHelper.ResetPasswordAsync(user, model.Token, model.Password);
                 if (result.Succeeded)
                 {
-                    ViewBag.Message = "Contraseña cambiada con éxito.";
+                    _flashMessage.Info( "Contraseña cambiada con éxito.");
                     return View();
                 }
 
-                ViewBag.Message = "Error cambiando la contraseña.";
+                _flashMessage.Info( "Error cambiando la contraseña.");
                 return View(model);
             }
 
-            ViewBag.Message = "Usuario no encontrado.";
+            _flashMessage.Info( "Usuario no encontrado.");
             return View(model);
         }
 

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SegHig.Data;
 using SegHig.Data.Entities;
 using SegHig.Helpers;
+using Vereyon.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 

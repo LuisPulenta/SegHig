@@ -60,22 +60,23 @@ namespace SegHig.Controllers
                 try
                 {
                     await _context.SaveChangesAsync();
+                    _flashMessage.Info("Cliente creado.");
                     return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateException dbUpdateException)
                 {
                     if (dbUpdateException.InnerException.Message.Contains("duplicada"))
                     {
-                        ModelState.AddModelError(string.Empty, "Ya existe un Tipo de Cliente con el mismo nombre.");
+                        _flashMessage.Danger( "Ya existe un Tipo de Cliente con el mismo nombre.");
                     }
                     else
                     {
-                        ModelState.AddModelError(string.Empty, dbUpdateException.InnerException.Message);
+                        _flashMessage.Danger( dbUpdateException.InnerException.Message);
                     }
                 }
                 catch (Exception exception)
                 {
-                    ModelState.AddModelError(string.Empty, exception.Message);
+                    _flashMessage.Danger( exception.Message);
                 }
 
             }
@@ -113,22 +114,23 @@ namespace SegHig.Controllers
                 {
                     _context.Update(ClienteTipo);
                     await _context.SaveChangesAsync();
+                    _flashMessage.Info("Tipo de Cliente actualizado.");
                     return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateException dbUpdateException)
                 {
                     if (dbUpdateException.InnerException.Message.Contains("duplicada"))
                     {
-                        ModelState.AddModelError(string.Empty, "Ya existe un Tipo de Cliente con el mismo nombre.");
+                        _flashMessage.Danger( "Ya existe un Tipo de Cliente con el mismo nombre.");
                     }
                     else
                     {
-                        ModelState.AddModelError(string.Empty, dbUpdateException.InnerException.Message);
+                        _flashMessage.Danger( dbUpdateException.InnerException.Message);
                     }
                 }
                 catch (Exception exception)
                 {
-                    ModelState.AddModelError(string.Empty, exception.Message);
+                    _flashMessage.Danger( exception.Message);
                 }
             }
             return View(ClienteTipo);
@@ -168,6 +170,7 @@ namespace SegHig.Controllers
             }
 
             await _context.SaveChangesAsync();
+            _flashMessage.Info("Tipo de Cliente borrado.");
             return RedirectToAction(nameof(Index));
         }
 

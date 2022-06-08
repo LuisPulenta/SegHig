@@ -33,6 +33,7 @@ namespace SegHig.Controllers
             return View(await _context.Clientes
                 .Include(t => t.ClienteTipo)
                 .Include(t => t.Empresa)
+                .Include(t => t.TrabajoTipos)
                 .Where(t => t.Empresa == user.Empresa)
                 .ToListAsync());
         }
@@ -46,6 +47,7 @@ namespace SegHig.Controllers
             }
 
             var ClienteTipo = await _context.Clientes
+                .Include(t => t.TrabajoTipos)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (ClienteTipo == null)
             {
@@ -63,6 +65,7 @@ namespace SegHig.Controllers
             ClienteViewModel model = new ClienteViewModel
             {
                 Id = 1,
+                Active = true,
                 ClienteTipos = await _combosHelper.GetComboClienteTiposAsync(),
             };
             return View(model);
@@ -90,22 +93,23 @@ namespace SegHig.Controllers
                 {
                     _context.Add(Cliente);
                     await _context.SaveChangesAsync();
+                    _flashMessage.Info("Cliente creado.");
                     return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateException dbUpdateException)
                 {
                     if (dbUpdateException.InnerException.Message.Contains("duplicada"))
                     {
-                        ModelState.AddModelError(string.Empty, "Ya existe una Cliente con el mismo nombre.");
+                        _flashMessage.Danger( "Ya existe un Cliente con el mismo nombre.");
                     }
                     else
                     {
-                        ModelState.AddModelError(string.Empty, dbUpdateException.InnerException.Message);
+                        _flashMessage.Danger( dbUpdateException.InnerException.Message);
                     }
                 }
                 catch (Exception exception)
                 {
-                    ModelState.AddModelError(string.Empty, exception.Message);
+                    _flashMessage.Danger( exception.Message);
                 }
 
             }
@@ -164,22 +168,23 @@ namespace SegHig.Controllers
                     Cliente.ClienteTipo = await _context.ClienteTipos.FindAsync(model.ClienteTipoId);
                     _context.Update(Cliente);
                     await _context.SaveChangesAsync();
+                    _flashMessage.Info("Cliente actualizado.");
                     return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateException dbUpdateException)
                 {
                     if (dbUpdateException.InnerException.Message.Contains("duplicada"))
                     {
-                        ModelState.AddModelError(string.Empty, "Ya existe una Cliente con el mismo nombre.");
+                        _flashMessage.Danger( "Ya existe un Cliente con el mismo nombre.");
                     }
                     else
                     {
-                        ModelState.AddModelError(string.Empty, dbUpdateException.InnerException.Message);
+                        _flashMessage.Danger( dbUpdateException.InnerException.Message);
                     }
                 }
                 catch (Exception exception)
                 {
-                    ModelState.AddModelError(string.Empty, exception.Message);
+                    _flashMessage.Danger( exception.Message);
                 }
 
             }
@@ -215,13 +220,16 @@ namespace SegHig.Controllers
             {
                 return Problem("Entity set 'DataContext.Clientes'  is null.");
             }
-            var ClienteTipo = await _context.Clientes.FindAsync(id);
-            if (ClienteTipo != null)
+            var cliente = await _context.Clientes
+                .Include(t => t.TrabajoTipos)
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (cliente != null)
             {
-                _context.Clientes.Remove(ClienteTipo);
+                _context.Clientes.Remove(cliente);
             }
 
             await _context.SaveChangesAsync();
+            _flashMessage.Info("Cliente borrado.");
             return RedirectToAction(nameof(Index));
         }
 
@@ -229,6 +237,66 @@ namespace SegHig.Controllers
         {
             return _context.Clientes.Any(e => e.Id == id);
         }
+
+        // GET: Clientes/AddTipoTrabajo
+        public async Task<IActionResult> AddTipoTrabajo(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            Cliente cliente = await _context.Clientes.FindAsync(id);
+            if (cliente == null)
+            {
+                return NotFound();
+            }
+            TrabajoTipoViewModel model = new()
+            {
+                ClienteId=cliente.Id,
+                Active=true,
+            };
+            return View(model);
+        }
+
+        // POST: Countries/AddState
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddTipoTrabajo(TrabajoTipoViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    TrabajoTipo trabajoTipo = new()
+                    {
+                        Name = model.Name,
+                        Active=true,
+                        Cliente = await _context.Clientes.FindAsync(model.ClienteId),
+                    };
+                    _context.Add(trabajoTipo);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Details), new { Id = model.ClienteId });
+                }
+                catch (DbUpdateException dbUpdateException)
+                {
+                    if (dbUpdateException.InnerException.Message.Contains("duplicada"))
+                    {
+                        ModelState.AddModelError(string.Empty, "Ya existe un Tipo de Trabajo con el mismo nombre en este Cliente.");
+                    }
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, dbUpdateException.InnerException.Message);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    ModelState.AddModelError(string.Empty, exception.Message);
+                }
+            }
+            return View(model);
+        }
+
     }
 }
 

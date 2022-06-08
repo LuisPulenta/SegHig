@@ -83,22 +83,23 @@ namespace SegHig.Controllers
                 {
                     _context.Add(empresa);
                     await _context.SaveChangesAsync();
+                    _flashMessage.Info("Empresa creada.");
                     return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateException dbUpdateException)
                 {
                     if (dbUpdateException.InnerException.Message.Contains("duplicada"))
                     {
-                        ModelState.AddModelError(string.Empty, "Ya existe una Empresa con el mismo nombre.");
+                        _flashMessage.Danger( "Ya existe una Empresa con el mismo nombre.");
                     }
                     else
                     {
-                        ModelState.AddModelError(string.Empty, dbUpdateException.InnerException.Message);
+                        _flashMessage.Danger( dbUpdateException.InnerException.Message);
                     }
                 }
                 catch (Exception exception)
                 {
-                    ModelState.AddModelError(string.Empty, exception.Message);
+                    _flashMessage.Danger( exception.Message);
                 }
 
             }
@@ -157,22 +158,23 @@ namespace SegHig.Controllers
                     empresa.EmpresaTipo = await _context.EmpresaTipos.FindAsync(model.EmpresaTipoId);
                     _context.Update(empresa);
                     await _context.SaveChangesAsync();
+                    _flashMessage.Info("Empresa actualizada.");
                     return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateException dbUpdateException)
                 {
                     if (dbUpdateException.InnerException.Message.Contains("duplicada"))
                     {
-                        ModelState.AddModelError(string.Empty, "Ya existe una Empresa con el mismo nombre.");
+                        _flashMessage.Danger( "Ya existe una Empresa con el mismo nombre.");
                     }
                     else
                     {
-                        ModelState.AddModelError(string.Empty, dbUpdateException.InnerException.Message);
+                        _flashMessage.Danger( dbUpdateException.InnerException.Message);
                     }
                 }
                 catch (Exception exception)
                 {
-                    ModelState.AddModelError(string.Empty, exception.Message);
+                    _flashMessage.Danger( exception.Message);
                 }
                 
             }
@@ -215,6 +217,7 @@ namespace SegHig.Controllers
             }
 
             await _context.SaveChangesAsync();
+            _flashMessage.Info("Empresa borrada.");
             return RedirectToAction(nameof(Index));
         }
 
