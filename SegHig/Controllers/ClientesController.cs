@@ -34,6 +34,7 @@ namespace SegHig.Controllers
                 .Include(t => t.ClienteTipo)
                 .Include(t => t.Empresa)
                 .Include(t => t.TrabajoTipos)
+                .ThenInclude(t => t.Formularios)
                 .Where(t => t.Empresa == user.Empresa)
                 .ToListAsync());
         }
@@ -48,6 +49,7 @@ namespace SegHig.Controllers
 
             var ClienteTipo = await _context.Clientes
                 .Include(t => t.TrabajoTipos)
+                .ThenInclude(t => t.Formularios)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (ClienteTipo == null)
             {
@@ -296,6 +298,334 @@ namespace SegHig.Controllers
             }
             return View(model);
         }
+
+        // GET: Clientes/TrabajoTipo/5
+        public async Task<IActionResult> EditTrabajoTipo(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            TrabajoTipo trabajoTipo = await _context.TrabajoTipos
+                .Include(s => s.Cliente)
+                .FirstOrDefaultAsync(s => s.Id == id);
+            if (trabajoTipo == null)
+            {
+                return NotFound();
+            }
+
+            TrabajoTipoViewModel model = new()
+            {
+                ClienteId = trabajoTipo.Cliente.Id,
+                Id = trabajoTipo.Id,
+                Name = trabajoTipo.Name
+            };
+
+            return View(model);
+        }
+
+        // POST: Clientes/TrabajoTipo/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditTrabajoTipo(int id, TrabajoTipoViewModel model)
+        {
+            if (id != model.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    TrabajoTipo trabajoTipo = new()
+                    {
+                        Id = model.Id,
+                        Name = model.Name,
+                    };
+
+                    _context.Update(trabajoTipo);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Details), new { Id = model.ClienteId });
+                }
+                catch (DbUpdateException dbUpdateException)
+                {
+                    if (dbUpdateException.InnerException.Message.Contains("duplicada"))
+                    {
+                        ModelState.AddModelError(string.Empty, "Ya existe un Tipo de Trabajo con el mismo nombre en este Cliente.");
+                    }
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, dbUpdateException.InnerException.Message);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    ModelState.AddModelError(string.Empty, exception.Message);
+                }
+            }
+            return View(model);
+        }
+
+        // GET: Clientes/DetailsTrabajoTipo/5
+        public async Task<IActionResult> DetailsTrabajoTipo(int? id)
+        {
+            if (id == null || _context.TrabajoTipos == null)
+            {
+                return NotFound();
+            }
+
+            var trabajoTipo = await _context.TrabajoTipos
+                .Include(c => c.Cliente)
+                .Include(c => c.Formularios)
+                .ThenInclude(c => c.FormularioDetalles)
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (trabajoTipo == null)
+            {
+                return NotFound();
+            }
+
+            return View(trabajoTipo);
+        }
+
+        // GET: Clientes/DeleteTrabajoTipo/5
+        public async Task<IActionResult> DeleteTrabajoTipo(int? id)
+        {
+            if (id == null || _context.TrabajoTipos == null)
+            {
+                return NotFound();
+            }
+
+            TrabajoTipo trabajoTipo = await _context.TrabajoTipos
+                .Include(c => c.Cliente)
+                .Include(c => c.Formularios)
+                .ThenInclude(c => c.FormularioDetalles)
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (trabajoTipo == null)
+            {
+                return NotFound();
+            }
+
+            return View(trabajoTipo);
+        }
+
+        // POST: Clientes/DeleteTrabajoTipo/5
+        [HttpPost, ActionName("DeleteTrabajoTipo")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteTrabajoTipoConfirmed(int id)
+        {
+            if (_context.TrabajoTipos == null)
+            {
+                return Problem("Entity set 'DataContext.TrabajoTipos'  is null.");
+            }
+            TrabajoTipo trabajoTipo = await _context.TrabajoTipos
+                .Include(c => c.Cliente)
+               .Include(c => c.Formularios)
+                .ThenInclude(c => c.FormularioDetalles)
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (trabajoTipo != null)
+            {
+                _context.TrabajoTipos.Remove(trabajoTipo);
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Details), new { Id = trabajoTipo.Cliente.Id });
+        }
+
+
+        // GET: Clientes/AddFormulario
+        public async Task<IActionResult> AddFormulario(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            TrabajoTipo trabajoTipo = await _context.TrabajoTipos.FindAsync(id);
+            if (trabajoTipo == null)
+            {
+                return NotFound();
+            }
+            FormularioViewModel model = new()
+            {
+                TrabajoTipoId = trabajoTipo.Id,
+                Active = true,
+            };
+            return View(model);
+        }
+
+        // POST: Countries/AddFormulario
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddFormulario(FormularioViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    Formulario formulario = new()
+                    {
+                        Name = model.Name,
+                        Active = true,
+                        TrabajoTipo = await _context.TrabajoTipos.FindAsync(model.TrabajoTipoId),
+                    };
+                    _context.Add(formulario);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(DetailsTrabajoTipo), new { Id = model.TrabajoTipoId });
+                }
+                catch (DbUpdateException dbUpdateException)
+                {
+                    if (dbUpdateException.InnerException.Message.Contains("duplicada"))
+                    {
+                        ModelState.AddModelError(string.Empty, "Ya existe un Formulario con el mismo nombre en este Tipo de Trabajo.");
+                    }
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, dbUpdateException.InnerException.Message);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    ModelState.AddModelError(string.Empty, exception.Message);
+                }
+            }
+            return View(model);
+        }
+
+        // GET: Clientes/Formulario/5
+        public async Task<IActionResult> EditFormulario(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            Formulario formulario = await _context.Formularios
+                .Include(s => s.TrabajoTipo)
+                .Include(s => s.FormularioDetalles)
+                .FirstOrDefaultAsync(s => s.Id == id);
+            if (formulario == null)
+            {
+                return NotFound();
+            }
+
+            FormularioViewModel model = new()
+            {
+                TrabajoTipoId = formulario.TrabajoTipo.Id,
+                Id = formulario.Id,
+                Name = formulario.Name
+            };
+
+            return View(model);
+        }
+
+        // POST: Clientes/Formulario/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditFormulario(int id, FormularioViewModel model)
+        {
+            if (id != model.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    Formulario formulario = new()
+                    {
+                        Id = model.Id,
+                        Name = model.Name,
+                    };
+
+                    _context.Update(formulario);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(DetailsTrabajoTipo), new { Id = model.TrabajoTipoId });
+                }
+                catch (DbUpdateException dbUpdateException)
+                {
+                    if (dbUpdateException.InnerException.Message.Contains("duplicada"))
+                    {
+                        ModelState.AddModelError(string.Empty, "Ya existe un Formulario con el mismo nombre en este Tipo de Trabajo.");
+                    }
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, dbUpdateException.InnerException.Message);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    ModelState.AddModelError(string.Empty, exception.Message);
+                }
+            }
+            return View(model);
+        }
+
+        // GET: Clientes/DetailsFormulario/5
+        public async Task<IActionResult> DetailsFormulario(int? id)
+        {
+            if (id == null || _context.Formularios == null)
+            {
+                return NotFound();
+            }
+
+            var formulario = await _context.Formularios
+                .Include(c => c.TrabajoTipo)
+                .Include(c => c.FormularioDetalles)
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (formulario == null)
+            {
+                return NotFound();
+            }
+
+            return View(formulario);
+        }
+
+        // GET: Clientes/DeleteFormulario/5
+        public async Task<IActionResult> DeleteFormulario(int? id)
+        {
+            if (id == null || _context.Formularios == null)
+            {
+                return NotFound();
+            }
+
+            Formulario formulario = await _context.Formularios
+                .Include(c => c.TrabajoTipo)
+                .Include(c => c.FormularioDetalles)
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (formulario == null)
+            {
+                return NotFound();
+            }
+
+            return View(formulario);
+        }
+
+        // POST: Clientes/DeleteFormulario/5
+        [HttpPost, ActionName("DeleteFormulario")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteFormularioConfirmed(int id)
+        {
+            if (_context.TrabajoTipos == null)
+            {
+                return Problem("Entity set 'DataContext.Formularios'  is null.");
+            }
+            Formulario formulario = await _context.Formularios
+                 .Include(c => c.TrabajoTipo)
+                .Include(c => c.FormularioDetalles)
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (formulario != null)
+            {
+                _context.Formularios.Remove(formulario);
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(DetailsTrabajoTipo), new { Id = formulario.TrabajoTipo.Id });
+        }
+
+
 
     }
 }

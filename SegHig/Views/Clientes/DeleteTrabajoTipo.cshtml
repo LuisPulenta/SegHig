@@ -1,0 +1,17 @@
+﻿@model SegHig.Data.Entities.TrabajoTipo
+
+@{
+    ViewData["Title"] = "Delete";
+}
+
+<h3>¿Está seguro de querer borrar este Tipo de Trabajo?</h3>
+<div>
+    <hr />
+    <partial name=_TrabajoTipoDetails/>
+    
+    <form asp-action="DeleteTrabajoTipo">
+        <input type="hidden" asp-for="Id" />
+        <input type="submit" value="Borrar" class="btn btn-outline-danger btn-sm" />
+        <a asp-action="Details" asp-route-id=@Model?.Cliente.Id class="btn btn-outline-success btn-sm">Regresar</a>
+    </form>
+</div>

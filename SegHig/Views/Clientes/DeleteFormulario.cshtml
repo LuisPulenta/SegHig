@@ -1,0 +1,17 @@
+﻿@model SegHig.Data.Entities.Formulario
+
+@{
+    ViewData["Title"] = "Delete";
+}
+
+<h3>¿Está seguro de querer borrar este Formulario?</h3>
+<div>
+    <hr />
+    <partial name=_FormularioDetails/>
+    
+    <form asp-action="DeleteFormulario">
+        <input type="hidden" asp-for="Id" />
+        <input type="submit" value="Borrar" class="btn btn-outline-danger btn-sm" />
+        <a asp-action="DetailsTrabajoTipo" asp-route-id=@Model?.TrabajoTipo.Id class="btn btn-outline-success btn-sm">Regresar</a>
+    </form>
+</div>

@@ -1,0 +1,27 @@
+﻿@model SegHig.Models.FormularioViewModel
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h4>Editar Formulario</h4>
+<hr />
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="EditFormulario">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="TrabajoTipoId" />
+            <partial name=_Formulario/>
+            
+            <div class="form-group mt-2">
+                <input type="submit" value="Guardar" class="btn btn-outline-primary btn-sm" />
+                <a asp-action="DetailsTrabajoTipo" asp-route-id=@Model.TrabajoTipoId class="btn btn-outline-success btn-sm">Regresar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

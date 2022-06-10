@@ -1,4 +1,4 @@
-﻿@model SegHig.Data.Entities.Cliente
+﻿@model SegHig.Data.Entities.Formulario
 
 @{
     ViewData["Title"] = "Details";
@@ -7,14 +7,14 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" />
 
 <div>
-    <h4>Cliente</h4>
+    <h4>Formulario</h4>
     <hr />
-    <partial name=_ClienteDetails/>
+    <partial name=_FormularioDetails/>
 </div>
 <div>
-    <a asp-action="AddTipoTrabajo" asp-route-id="@Model?.Id" class="btn btn-outline-primary btn-sm" >Agregar Tipo de Trabajo</a>
-    <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-outline-warning btn-sm" >Editar Cliente</a>
-    <a asp-action="Index" class="btn btn-outline-success btn-sm">Regresar</a>
+    <a asp-action="AddFormularioDetalle" asp-route-id="@Model?.Id" class="btn btn-outline-primary btn-sm" >Agregar Detalle</a>
+    <a asp-action="EditFormulario" asp-route-id="@Model?.Id" class="btn btn-outline-warning btn-sm" >Editar Formulario</a>
+    <a asp-action="DetailsTrabajoTipo" asp-route-id="@Model?.TrabajoTipo.Id" class="btn btn-outline-success btn-sm">Regresar</a>
 </div>
 
 <hr />
@@ -23,35 +23,30 @@
     <div class="col-md-12">
         <div class="panel panel-default">
             <div class="panel-heading">
-                <h3 class="panel-title">Tipos de Trabajo</h3>
+                <h3 class="panel-title">Detalles</h3>
             </div>
             <div class="panel-body">
                 <table class="table table-hover table-responsive table-striped" id="MyTable">
 
+
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.TrabajoTipos.FirstOrDefault().Name)
+                @Html.DisplayNameFor(model => model.FormularioDetalles.FirstOrDefault().Description)
             </th>
-            <th>
-                @Html.DisplayNameFor(model => model.TrabajoTipos.FirstOrDefault().Formularios)
-            </th>
-            <th>
-            </th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model.TrabajoTipos) {
+@foreach (var item in Model.FormularioDetalles) {
         <tr>
             <td>
-                @Html.DisplayFor(modelItem => item.Name)
-            </td><td>
-                @Html.DisplayFor(modelItem => item.Formularios.Count)
+                @Html.DisplayFor(modelItem => item.Description)
             </td>
             <td>
-                <a asp-action="EditTrabajoTipo" asp-route-id="@item.Id" class="btn btn-outline-warning"><i class="fa-solid fa-pen-to-square"></i></a>
-                <a asp-action="DetailsTrabajoTipo" asp-route-id="@item.Id" class="btn btn-outline-info"><i class="fa-solid fa-circle-info"></i></a>
-                <a asp-action="DeleteTrabajoTipo" asp-route-id="@item.Id" class="btn btn-outline-danger"><i class="fa-solid fa-trash"></i></a>
+                <a asp-action="EditFormularioDetalle"  asp-route-id="@item.Id" class="btn btn-outline-warning btn-sm">Editar</a> 
+                <a asp-action="DetailsFormularioDetalle"  asp-route-id="@item.Id" class="btn btn-outline-info btn-sm">Detalles</a> 
+                <a asp-action="DeleteFormularioDetalle"  asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm">Borrar</a>
             </td>
         </tr>
 }
