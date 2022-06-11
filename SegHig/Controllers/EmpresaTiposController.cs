@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SegHig.Data;
 using SegHig.Data.Entities;
+using SegHig.Helpers;
 using Vereyon.Web;
+using static SegHig.Helpers.ModalHelper;
 
 namespace SegHig.Controllers
 {
@@ -43,141 +45,90 @@ namespace SegHig.Controllers
             return View(empresaTipo);
         }
 
-        // GET: EmpresaTipos/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: EmpresaTipos/Create
         
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(EmpresaTipo empresaTipo)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(empresaTipo);
-                try
-                {
-                    await _context.SaveChangesAsync();
-                    _flashMessage.Info("Tipo de Empresa creado.");
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (DbUpdateException dbUpdateException)
-                {
-                    if (dbUpdateException.InnerException.Message.Contains("duplicada"))
-                    {
-                        _flashMessage.Danger( "Ya existe un Tipo de Empresa con el mismo nombre.");
-                    }
-                    else
-                    {
-                        _flashMessage.Danger( dbUpdateException.InnerException.Message);
-                    }
-                }
-                catch (Exception exception)
-                {
-                    _flashMessage.Danger( exception.Message);
-                }
-
-            }
-            return View(empresaTipo);
-        }
-
-        // GET: EmpresaTipos/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null || _context.EmpresaTipos == null)
-            {
-                return NotFound();
-            }
-
-            var empresaTipo = await _context.EmpresaTipos.FindAsync(id);
-            if (empresaTipo == null)
-            {
-                return NotFound();
-            }
-            return View(empresaTipo);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, EmpresaTipo empresaTipo)
-        {
-            if (id != empresaTipo.Id)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(empresaTipo);
-                    await _context.SaveChangesAsync();
-                    _flashMessage.Info("Tipo de Empresa actualizado.");
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (DbUpdateException dbUpdateException)
-                {
-                    if (dbUpdateException.InnerException.Message.Contains("duplicada"))
-                    {
-                        _flashMessage.Danger( "Ya existe un Tipo de Empresa con el mismo nombre.");
-                    }
-                    else
-                    {
-                        _flashMessage.Danger( dbUpdateException.InnerException.Message);
-                    }
-                }
-                catch (Exception exception)
-                {
-                    _flashMessage.Danger( exception.Message);
-                }
-            }
-            return View(empresaTipo);
-        }
-
-        // GET: EmpresaTipos/Delete/5
+        [NoDirectAccess]
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null || _context.EmpresaTipos == null)
-            {
-                return NotFound();
-            }
-
-            var empresaTipo = await _context.EmpresaTipos
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (empresaTipo == null)
-            {
-                return NotFound();
-            }
-
-            return View(empresaTipo);
-        }
-
-        // POST: EmpresaTipos/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            if (_context.EmpresaTipos == null)
-            {
-                return Problem("Entity set 'DataContext.EmpresaTipos'  is null.");
-            }
-            var empresaTipo = await _context.EmpresaTipos.FindAsync(id);
-            if (empresaTipo != null)
+            EmpresaTipo empresaTipo = await _context.EmpresaTipos.FirstOrDefaultAsync(c => c.Id == id);
+            try
             {
                 _context.EmpresaTipos.Remove(empresaTipo);
+                await _context.SaveChangesAsync();
+                _flashMessage.Info("Registro borrado.");
+            }
+            catch
+            {
+                _flashMessage.Danger("No se puede borrar el Tipo de Empresa porque tiene registros relacionados.");
             }
 
-            await _context.SaveChangesAsync();
-            _flashMessage.Info("Tipo de empresa borrada.");
             return RedirectToAction(nameof(Index));
         }
 
-        private bool EmpresaTipoExists(int id)
+        [NoDirectAccess]
+        public async Task<IActionResult> AddOrEdit(int id = 0)
         {
-            return _context.EmpresaTipos.Any(e => e.Id == id);
+            if (id == 0)
+            {
+                return View(new EmpresaTipo());
+            }
+            else
+            {
+                EmpresaTipo empresaTipo = await _context.EmpresaTipos.FindAsync(id);
+                if (empresaTipo == null)
+                {
+                    return NotFound();
+                }
+
+                return View(empresaTipo);
+            }
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddOrEdit(int id, EmpresaTipo empresaTipo)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    if (id == 0) //Insert
+                    {
+                        _context.Add(empresaTipo);
+                        await _context.SaveChangesAsync();
+                        _flashMessage.Info("Registro creado.");
+                    }
+                    else //Update
+                    {
+                        _context.Update(empresaTipo);
+                        await _context.SaveChangesAsync();
+                        _flashMessage.Info("Registro actualizado.");
+                    }
+                }
+                catch (DbUpdateException dbUpdateException)
+                {
+                    if (dbUpdateException.InnerException.Message.Contains("duplicada"))
+                    {
+                        _flashMessage.Danger("Ya existe un Tipo de Empresa con el mismo nombre.");
+                    }
+                    else
+                    {
+                        _flashMessage.Danger(dbUpdateException.InnerException.Message);
+                    }
+                    return View(empresaTipo);
+                }
+                catch (Exception exception)
+                {
+                    _flashMessage.Danger(exception.Message);
+                    return View(empresaTipo);
+                }
+
+                return Json(new { isValid = true, html = ModalHelper.RenderRazorViewToString(this, "_ViewAll", _context.EmpresaTipos.ToList()) });
+
+            }
+
+            return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "AddOrEdit", empresaTipo) });
+        }
+
+
     }
 }

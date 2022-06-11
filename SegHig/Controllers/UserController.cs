@@ -8,6 +8,7 @@ using SegHig.Enums;
 using SegHig.Helpers;
 using SegHig.Models;
 using Vereyon.Web;
+using static SegHig.Helpers.ModalHelper;
 
 namespace Shooping.Controllers
 {
@@ -37,6 +38,7 @@ namespace Shooping.Controllers
                 .ToListAsync());
         }
 
+        [NoDirectAccess]
         public async Task<IActionResult> Create()
         {
             AddUserViewModel model = new AddUserViewModel
@@ -64,6 +66,7 @@ namespace Shooping.Controllers
                     _flashMessage.Danger( "Este correo ya está siendo usado por otro usuario.");
                     model.UserType = UserType.Admin;
                     model.Empresas = await _combosHelper.GetComboEmpresasAsync();
+                    model.Active = true;
                     return View(model);
                 }
                 string myToken = await _userHelper.GenerateEmailConfirmationTokenAsync(user);
@@ -83,18 +86,23 @@ namespace Shooping.Controllers
                 if (response.IsSuccess)
                 {
                     _flashMessage.Info( "Las instrucciones para habilitar el Administrador han sido enviadas al correo.");
-                    return View(model);
+                    return Json(new
+                    {
+                        isValid = true,
+                        html = ModalHelper.RenderRazorViewToString(this, "_ViewAll", _context.Users
+               .Where(c => c.UserType == UserType.Admin)
+               .ToList())
+                    });
                 }
-
-                
-                return RedirectToAction("Index", "Users");
+                _flashMessage.Danger(response.Message);
             }
             model.EmpresaId = null;
             model.UserType = UserType.Admin;
             model.Empresas = await _combosHelper.GetComboEmpresasAsync();
-            return View(model);
+            return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "Create", model) });
         }
 
+        [NoDirectAccess]
         public async Task<IActionResult> EditUser(string id)
         {
             User user = await _userHelper.GetUserByIdAsync(id);
@@ -110,7 +118,7 @@ namespace Shooping.Controllers
                 LastName = user.LastName,
                 PhoneNumber = user.PhoneNumber,
                 Empresas = await _combosHelper.GetComboEmpresasAsync(),
-                EmpresaId = user.Empresa.Id,
+                EmpresaId = 1,
                 Id = user.Id,
                 Document = user.Document,
                 Active = user.Active
@@ -129,17 +137,23 @@ namespace Shooping.Controllers
                 user.LastName = model.LastName;
                 user.Address = model.Address;
                 user.PhoneNumber = model.PhoneNumber;
-                user.Empresa = await _context.Empresas.FindAsync(model.EmpresaId);
+                //user.Empresa = await _context.Empresas.FindAsync(model.EmpresaId);
                 user.Document = model.Document;
                 user.Active = model.Active;
 
                 await _userHelper.UpdateUserAsync(user);
                 _flashMessage.Info("Administrador actualizado.");
-                return RedirectToAction("Index", "Users");
+                return Json(new
+                {
+                    isValid = true,
+                    html = ModalHelper.RenderRazorViewToString(this, "_ViewAll", _context.Users
+                    .ToList())
+                });
+
             }
 
             model.Empresas = await _combosHelper.GetComboEmpresasAsync();
-            return View(model);
+            return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "EditUser", model) });
         }
 
         public async Task<IActionResult> OnOff(string id)

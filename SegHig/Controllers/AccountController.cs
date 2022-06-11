@@ -8,6 +8,7 @@ using SegHig.Enums;
 using SegHig.Helpers;
 using SegHig.Models;
 using Vereyon.Web;
+using static SegHig.Helpers.ModalHelper;
 
 namespace SegHig.Controllers
 {
@@ -101,6 +102,7 @@ namespace SegHig.Controllers
             return View();
         }
 
+        [NoDirectAccess]
         public async Task<IActionResult> Register()
         {
             AddUserViewModel model = new AddUserViewModel
@@ -113,16 +115,16 @@ namespace SegHig.Controllers
             return View(model);
         }
 
+
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(AddUserViewModel model)
         {
-            string imageId = string.Empty;
-
-
+            model.Active = true;
             if (ModelState.IsValid)
             {
-                model.Active = true;
+                
                 User user = await _userHelper.AddUserAsync(model);
                 if (user == null)
                 {
@@ -132,21 +134,6 @@ namespace SegHig.Controllers
                     model.Active = true;
                     return View(model);
                 };
-
-                //LoginViewModel loginViewModel = new()
-                //{
-                //    Password = model.Password,
-                //    RememberMe = false,
-                //    Username = model.Username
-                //};
-
-                //var result2 = await _userHelper.LoginAsync(loginViewModel);
-
-                //if (result2.Succeeded)
-                //{
-                //    return RedirectToAction("Index", "Home");
-                //}
-
                 string myToken = await _userHelper.GenerateEmailConfirmationTokenAsync(user);
                 string tokenLink = Url.Action("ConfirmEmail", "Account", new
                 {
@@ -164,16 +151,23 @@ namespace SegHig.Controllers
                 if (response.IsSuccess)
                 {
                     _flashMessage.Info( "Las instrucciones para habilitar su cuenta han sido enviadas al correo.");
-                    return View(model);
+                    return Json(new
+                    {
+                        isValid = true,
+                        html = ModalHelper.RenderRazorViewToString(this, "_ViewAll", _context.Users
+               .Where(c => c.UserType == UserType.Admin)
+               .ToList())
+                    });
                 }
                 _flashMessage.Danger( response.Message);
-
             }
+            model.EmpresaId = null;
+            model.UserType = UserType.Admin;
             model.Empresas = await _combosHelper.GetComboEmpresasAsync();
-            //return View(model);
-            return RedirectToAction("Index", "Account");
+            return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "Register", model) });
         }
 
+        [NoDirectAccess]
         public async Task<IActionResult> ChangeUser()
         {
             User user = await _userHelper.GetUserAsync(User.Identity.Name);
@@ -214,13 +208,19 @@ namespace SegHig.Controllers
 
                 await _userHelper.UpdateUserAsync(user);
                 _flashMessage.Info("Usuario actualizado.");
-                return RedirectToAction("Index", "Home");
+                return Json(new
+                {
+                    isValid = true,
+                    html = ModalHelper.RenderRazorViewToString(this, "_ViewAll", _context.Users
+                    .ToList())
+                });
             }
 
             model.Empresas = await _combosHelper.GetComboEmpresasAsync();
-            return View(model);
+            return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "ChangeUser", model) });
         }
 
+        [NoDirectAccess]
         public async Task<IActionResult> EditUser(string id)
         {
             User user = await _userHelper.GetUserByIdAsync(id);
@@ -260,11 +260,18 @@ namespace SegHig.Controllers
                 user.Active = model.Active;
 
                 await _userHelper.UpdateUserAsync(user);
-                return RedirectToAction("Index", "Account");
+                _flashMessage.Info("Usuario actualizado.");
+                return Json(new
+                {
+                    isValid = true,
+                    html = ModalHelper.RenderRazorViewToString(this, "_ViewAll", _context.Users
+              .Where(c => c.UserType == UserType.Admin)
+              .ToList())
+                });
             }
 
             model.Empresas = await _combosHelper.GetComboEmpresasAsync();
-            return View(model);
+            return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "EditUser", model) });
         }
 
         public async Task<IActionResult> OnOff(string id)
@@ -281,43 +288,21 @@ namespace SegHig.Controllers
                 return RedirectToAction("Index", "Account");
         }
 
-        public async Task<IActionResult> DeleteUser(string? id)
+        public async Task<IActionResult> DeleteUser(string id)
         {
-            if (id == null || _context.Users == null)
-            {
-                return NotFound();
-            }
-
-            var user = await _context.Users
-                .Include(e=> e.Empresa)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            User user = await _context.Users
+                .FirstOrDefaultAsync(p => p.Id == id);
             if (user == null)
             {
                 return NotFound();
             }
 
-            return View(user);
-        }
-
-        // POST: ClienteTipos/Delete/5
-        [HttpPost, ActionName("DeleteUser")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(string id)
-        {
-            if (_context.Users == null)
-            {
-                return Problem("Entity set 'DataContext.Users'  is null.");
-            }
-            var user = await _context.Users.FirstOrDefaultAsync(m => m.Id == id);
-            if (user != null)
-            {
-                _context.Users.Remove(user);
-            }
-
+            _context.Users.Remove(user);
             await _context.SaveChangesAsync();
-            _flashMessage.Info("Usuario borrado.");
+            _flashMessage.Info("Registro borrado.");
             return RedirectToAction(nameof(Index));
         }
+
 
 
         public IActionResult ChangePassword()

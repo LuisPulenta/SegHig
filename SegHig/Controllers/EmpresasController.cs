@@ -6,6 +6,7 @@ using SegHig.Data.Entities;
 using SegHig.Helpers;
 using SegHig.Models;
 using Vereyon.Web;
+using static SegHig.Helpers.ModalHelper;
 
 namespace SegHig.Controllers
 {
@@ -16,7 +17,7 @@ namespace SegHig.Controllers
         private readonly ICombosHelper _combosHelper;
         private readonly IFlashMessage _flashMessage;
 
-        public EmpresasController(DataContext context,ICombosHelper combosHelper, IFlashMessage flashMessage)
+        public EmpresasController(DataContext context, ICombosHelper combosHelper, IFlashMessage flashMessage)
         {
             _context = context;
             _combosHelper = combosHelper;
@@ -53,11 +54,11 @@ namespace SegHig.Controllers
         // GET: Empresas/Create
 
 
+        [NoDirectAccess]
         public async Task<IActionResult> Create()
         {
             EmpresaViewModel model = new EmpresaViewModel
             {
-                Id = 1,
                 EmpresaTipos = await _combosHelper.GetComboEmpresaTiposAsync(),
             };
             return View(model);
@@ -84,40 +85,42 @@ namespace SegHig.Controllers
                     _context.Add(empresa);
                     await _context.SaveChangesAsync();
                     _flashMessage.Info("Empresa creada.");
-                    return RedirectToAction(nameof(Index));
+                    return Json(new
+                    {
+                        isValid = true,
+                        html = ModalHelper.RenderRazorViewToString(this, "_ViewAll", _context.Empresas.ToList())
+                    });
+
                 }
                 catch (DbUpdateException dbUpdateException)
                 {
                     if (dbUpdateException.InnerException.Message.Contains("duplicada"))
                     {
-                        _flashMessage.Danger( "Ya existe una Empresa con el mismo nombre.");
+                        _flashMessage.Danger("Ya existe una Empresa con el mismo nombre.");
                     }
                     else
                     {
-                        _flashMessage.Danger( dbUpdateException.InnerException.Message);
+                        _flashMessage.Danger(dbUpdateException.InnerException.Message);
                     }
                 }
                 catch (Exception exception)
                 {
-                    _flashMessage.Danger( exception.Message);
+                    _flashMessage.Danger(exception.Message);
                 }
 
             }
             model.EmpresaTipos = await _combosHelper.GetComboEmpresaTiposAsync();
-            return View(model);
+            return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "Create", model) });
         }
 
         // GET: Empresas/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        [NoDirectAccess]
+        public async Task<IActionResult> Edit(int id)
         {
-            if (id == null || _context.Empresas == null)
-            {
-                return NotFound();
-            }
-
+        
             Empresa empresa = await _context.Empresas
-                .Include(t=>t.EmpresaTipo)
-                .FirstOrDefaultAsync(t=>t.Id == id);
+                .Include(t => t.EmpresaTipo)
+                .FirstOrDefaultAsync(t => t.Id == id);
             if (empresa == null)
             {
                 return NotFound();
@@ -159,71 +162,53 @@ namespace SegHig.Controllers
                     _context.Update(empresa);
                     await _context.SaveChangesAsync();
                     _flashMessage.Info("Empresa actualizada.");
-                    return RedirectToAction(nameof(Index));
+                    return Json(new
+                    {
+                        isValid = true,
+                        html = ModalHelper.RenderRazorViewToString(this, "_ViewAll", _context.Empresas
+                        .Include(p => p.Users)
+                        .ToList())
+                    });
+
                 }
                 catch (DbUpdateException dbUpdateException)
                 {
                     if (dbUpdateException.InnerException.Message.Contains("duplicada"))
                     {
-                        _flashMessage.Danger( "Ya existe una Empresa con el mismo nombre.");
+                        _flashMessage.Danger("Ya existe una Empresa con el mismo nombre.");
                     }
                     else
                     {
-                        _flashMessage.Danger( dbUpdateException.InnerException.Message);
+                        _flashMessage.Danger(dbUpdateException.InnerException.Message);
                     }
                 }
                 catch (Exception exception)
                 {
-                    _flashMessage.Danger( exception.Message);
+                    _flashMessage.Danger(exception.Message);
                 }
-                
+
             }
             model.EmpresaTipos = await _combosHelper.GetComboEmpresaTiposAsync();
-            return View(model);
+            return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "Edit", model) });
             //return RedirectToAction(nameof(Index));
         }
 
         // GET: Empresas/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        public async Task<IActionResult> Delete(int id)
         {
-            if (id == null || _context.Empresas == null)
+            Empresa empresa = await _context.Empresas
+                .Include(p => p.Users)
+                .FirstOrDefaultAsync(p => p.Id == id);
+            if (empresa == null)
             {
                 return NotFound();
             }
 
-            var empresaTipo = await _context.Empresas
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (empresaTipo == null)
-            {
-                return NotFound();
-            }
-
-            return View(empresaTipo);
-        }
-
-        // POST: Empresas/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            if (_context.Empresas == null)
-            {
-                return Problem("Entity set 'DataContext.Empresas'  is null.");
-            }
-            var empresaTipo = await _context.Empresas.FindAsync(id);
-            if (empresaTipo != null)
-            {
-                _context.Empresas.Remove(empresaTipo);
-            }
-
+            _context.Empresas.Remove(empresa);
             await _context.SaveChangesAsync();
-            _flashMessage.Info("Empresa borrada.");
+            _flashMessage.Info("Registro borrado.");
             return RedirectToAction(nameof(Index));
         }
 
-        private bool EmpresaTipoExists(int id)
-        {
-            return _context.Empresas.Any(e => e.Id == id);
-        }
     }
 }

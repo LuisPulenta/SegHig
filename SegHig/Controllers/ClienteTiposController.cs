@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SegHig.Data;
 using SegHig.Data.Entities;
+using SegHig.Helpers;
 using Vereyon.Web;
+using static SegHig.Helpers.ModalHelper;
 
 namespace SegHig.Controllers
 {
@@ -43,140 +45,90 @@ namespace SegHig.Controllers
             return View(ClienteTipo);
         }
 
-        // GET: ClienteTipos/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
+        
 
-        // POST: ClienteTipos/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(ClienteTipo ClienteTipo)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(ClienteTipo);
-                try
-                {
-                    await _context.SaveChangesAsync();
-                    _flashMessage.Info("Cliente creado.");
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (DbUpdateException dbUpdateException)
-                {
-                    if (dbUpdateException.InnerException.Message.Contains("duplicada"))
-                    {
-                        _flashMessage.Danger( "Ya existe un Tipo de Cliente con el mismo nombre.");
-                    }
-                    else
-                    {
-                        _flashMessage.Danger( dbUpdateException.InnerException.Message);
-                    }
-                }
-                catch (Exception exception)
-                {
-                    _flashMessage.Danger( exception.Message);
-                }
-
-            }
-            return View(ClienteTipo);
-        }
-
-        // GET: ClienteTipos/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null || _context.ClienteTipos == null)
-            {
-                return NotFound();
-            }
-
-            var ClienteTipo = await _context.ClienteTipos.FindAsync(id);
-            if (ClienteTipo == null)
-            {
-                return NotFound();
-            }
-            return View(ClienteTipo);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, ClienteTipo ClienteTipo)
-        {
-            if (id != ClienteTipo.Id)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(ClienteTipo);
-                    await _context.SaveChangesAsync();
-                    _flashMessage.Info("Tipo de Cliente actualizado.");
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (DbUpdateException dbUpdateException)
-                {
-                    if (dbUpdateException.InnerException.Message.Contains("duplicada"))
-                    {
-                        _flashMessage.Danger( "Ya existe un Tipo de Cliente con el mismo nombre.");
-                    }
-                    else
-                    {
-                        _flashMessage.Danger( dbUpdateException.InnerException.Message);
-                    }
-                }
-                catch (Exception exception)
-                {
-                    _flashMessage.Danger( exception.Message);
-                }
-            }
-            return View(ClienteTipo);
-        }
-
-        // GET: ClienteTipos/Delete/5
+        [NoDirectAccess]
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null || _context.ClienteTipos == null)
-            {
-                return NotFound();
-            }
-
-            var ClienteTipo = await _context.ClienteTipos
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (ClienteTipo == null)
-            {
-                return NotFound();
-            }
-
-            return View(ClienteTipo);
-        }
-
-        // POST: ClienteTipos/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            if (_context.ClienteTipos == null)
-            {
-                return Problem("Entity set 'DataContext.ClienteTipos'  is null.");
-            }
-            var ClienteTipo = await _context.ClienteTipos.FindAsync(id);
-            if (ClienteTipo != null)
+            ClienteTipo ClienteTipo = await _context.ClienteTipos.FirstOrDefaultAsync(c => c.Id == id);
+            try
             {
                 _context.ClienteTipos.Remove(ClienteTipo);
+                await _context.SaveChangesAsync();
+                _flashMessage.Info("Registro borrado.");
+            }
+            catch
+            {
+                _flashMessage.Danger("No se puede borrar el Tipo de Cliente porque tiene registros relacionados.");
             }
 
-            await _context.SaveChangesAsync();
-            _flashMessage.Info("Tipo de Cliente borrado.");
             return RedirectToAction(nameof(Index));
         }
 
-        private bool ClienteTipoExists(int id)
+        [NoDirectAccess]
+        public async Task<IActionResult> AddOrEdit(int id = 0)
         {
-            return _context.ClienteTipos.Any(e => e.Id == id);
+            if (id == 0)
+            {
+                return View(new ClienteTipo());
+            }
+            else
+            {
+                ClienteTipo ClienteTipo = await _context.ClienteTipos.FindAsync(id);
+                if (ClienteTipo == null)
+                {
+                    return NotFound();
+                }
+
+                return View(ClienteTipo);
+            }
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddOrEdit(int id, ClienteTipo ClienteTipo)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    if (id == 0) //Insert
+                    {
+                        _context.Add(ClienteTipo);
+                        await _context.SaveChangesAsync();
+                        _flashMessage.Info("Registro creado.");
+                    }
+                    else //Update
+                    {
+                        _context.Update(ClienteTipo);
+                        await _context.SaveChangesAsync();
+                        _flashMessage.Info("Registro actualizado.");
+                    }
+                }
+                catch (DbUpdateException dbUpdateException)
+                {
+                    if (dbUpdateException.InnerException.Message.Contains("duplicada"))
+                    {
+                        _flashMessage.Danger("Ya existe un Tipo de Cliente con el mismo nombre.");
+                    }
+                    else
+                    {
+                        _flashMessage.Danger(dbUpdateException.InnerException.Message);
+                    }
+                    return View(ClienteTipo);
+                }
+                catch (Exception exception)
+                {
+                    _flashMessage.Danger(exception.Message);
+                    return View(ClienteTipo);
+                }
+
+                return Json(new { isValid = true, html = ModalHelper.RenderRazorViewToString(this, "_ViewAll", _context.ClienteTipos.ToList()) });
+
+            }
+
+            return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "AddOrEdit", ClienteTipo) });
+        }
+
     }
 }
