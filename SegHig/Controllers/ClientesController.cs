@@ -35,6 +35,7 @@ namespace SegHig.Controllers
                 .Include(t => t.Empresa)
                 .Include(t => t.TrabajoTipos)
                 .ThenInclude(t => t.Formularios)
+                .Include(t => t.Empleados)
                 .Where(t => t.Empresa == user.Empresa)
                 .ToListAsync());
         }
@@ -50,6 +51,7 @@ namespace SegHig.Controllers
             var ClienteTipo = await _context.Clientes
                 .Include(t => t.TrabajoTipos)
                 .ThenInclude(t => t.Formularios)
+                .Include(t => t.Empleados)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (ClienteTipo == null)
             {

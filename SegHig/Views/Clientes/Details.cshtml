@@ -20,13 +20,13 @@
 <hr />
 
  <div class="row">
-    <div class="col-md-12">
+    <div class="col-md-6">
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">Tipos de Trabajo</h3>
             </div>
             <div class="panel-body">
-                <table class="table table-hover table-responsive table-striped" id="MyTable">
+                <table class="table table-hover table-responsive table-striped" id="MyTableTiposTrabajo">
 
     <thead>
         <tr>
@@ -65,6 +65,59 @@
                 <a asp-action="EditTrabajoTipo" asp-route-id="@item.Id" class="btn btn-outline-warning"><i class="fa-solid fa-pen-to-square"></i></a>
                 <a asp-action="DetailsTrabajoTipo" asp-route-id="@item.Id" class="btn btn-outline-info"><i class="fa-solid fa-circle-info"></i></a>
                 <a asp-action="DeleteTrabajoTipo" asp-route-id="@item.Id" class="btn btn-outline-danger"><i class="fa-solid fa-trash"></i></a>
+            </td>
+        </tr>
+}
+    </tbody>
+
+@*</table>*@
+
+                </table>
+            </div>
+        </div>
+    </div>
+
+
+
+    <div class="col-md-6">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Empleados</h3>
+            </div>
+            <div class="panel-body">
+                <table class="table table-hover table-responsive table-striped" id="MyTableEmpleados">
+
+    <thead>
+        <tr>
+            <th>
+                Empleado
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Empleados.FirstOrDefault().Document)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Empleados.FirstOrDefault().Active)
+            </th>
+            <th>
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model.Empleados) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.FullName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Document)
+            </td>
+             <td>
+                @Html.DisplayFor(modelItem => item.Active)
+            </td>
+            <td>
+                <a asp-action="EditEmpleado" asp-route-id="@item.Id" class="btn btn-outline-warning"><i class="fa-solid fa-pen-to-square"></i></a>
+                <a asp-action="DetailsEmpleado" asp-route-id="@item.Id" class="btn btn-outline-info"><i class="fa-solid fa-circle-info"></i></a>
+                <a asp-action="DeleteEmpleado" asp-route-id="@item.Id" class="btn btn-outline-danger"><i class="fa-solid fa-trash"></i></a>
             </td>
         </tr>
 }

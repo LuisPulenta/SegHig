@@ -13,6 +13,7 @@ namespace SegHig.Data
         public DbSet<ClienteTipo> ClienteTipos { get; set; }
         public DbSet<EmpresaTipo> EmpresaTipos { get; set; }
         public DbSet<Cliente> Clientes { get; set; }
+        public DbSet<Empleado> Empleados { get; set; }
         public DbSet<Empresa> Empresas { get; set; }
         public DbSet<TrabajoTipo> TrabajoTipos { get; set; }
         public DbSet<Formulario> Formularios { get; set; }
@@ -26,6 +27,7 @@ namespace SegHig.Data
             modelBuilder.Entity<Empresa>().HasIndex(c => c.Name).IsUnique();
             modelBuilder.Entity<Cliente>().HasIndex("Name", "EmpresaId").IsUnique();
             modelBuilder.Entity<TrabajoTipo>().HasIndex("Name", "ClienteId").IsUnique();
+            modelBuilder.Entity<Empleado>().HasIndex("Document", "ClienteId").IsUnique();
             modelBuilder.Entity<Formulario>().HasIndex("Name", "TrabajoTipoId").IsUnique();
             modelBuilder.Entity<FormularioDetalle>().HasIndex("Description", "FormularioId").IsUnique();
         }
