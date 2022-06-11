@@ -51,7 +51,22 @@ namespace SegHig.Controllers
         {
             if (ModelState.IsValid)
             {
+                User user = await _userHelper.GetUserAsync(model.Username);
+
+                if (user.Active == false)
+                {
+                    {
+                        _flashMessage.Danger("Este usuario no está activo.");
+                        return RedirectToAction("Login", "Account");
+                    }
+                }
+
+
                 Microsoft.AspNetCore.Identity.SignInResult result = await _userHelper.LoginAsync(model);
+                
+                
+                
+                
                 if (result.Succeeded)
                 {
                     return RedirectToAction("Index", "Home");

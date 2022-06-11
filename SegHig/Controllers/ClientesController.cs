@@ -272,6 +272,7 @@ namespace SegHig.Controllers
                 {
                     TrabajoTipo trabajoTipo = new()
                     {
+                        Orden = model.Orden,
                         Name = model.Name,
                         Active=true,
                         Cliente = await _context.Clientes.FindAsync(model.ClienteId),
@@ -319,7 +320,9 @@ namespace SegHig.Controllers
             {
                 ClienteId = trabajoTipo.Cliente.Id,
                 Id = trabajoTipo.Id,
-                Name = trabajoTipo.Name
+                Orden = trabajoTipo.Orden,
+                Name = trabajoTipo.Name,
+                Active = trabajoTipo.Active
             };
 
             return View(model);
@@ -342,7 +345,9 @@ namespace SegHig.Controllers
                     TrabajoTipo trabajoTipo = new()
                     {
                         Id = model.Id,
+                        Orden = model.Orden,
                         Name = model.Name,
+                        Active = model.Active,
                     };
 
                     _context.Update(trabajoTipo);
@@ -466,6 +471,7 @@ namespace SegHig.Controllers
                 {
                     Formulario formulario = new()
                     {
+                        Orden = model.Orden,
                         Name = model.Name,
                         Active = true,
                         TrabajoTipo = await _context.TrabajoTipos.FindAsync(model.TrabajoTipoId),
@@ -514,7 +520,9 @@ namespace SegHig.Controllers
             {
                 TrabajoTipoId = formulario.TrabajoTipo.Id,
                 Id = formulario.Id,
-                Name = formulario.Name
+                Orden = formulario.Orden,
+                Name = formulario.Name,
+                Active = formulario.Active
             };
 
             return View(model);
@@ -537,7 +545,9 @@ namespace SegHig.Controllers
                     Formulario formulario = new()
                     {
                         Id = model.Id,
+                        Orden = model.Orden,
                         Name = model.Name,
+                        Active = model.Active,
                     };
 
                     _context.Update(formulario);
@@ -625,7 +635,202 @@ namespace SegHig.Controllers
             return RedirectToAction(nameof(DetailsTrabajoTipo), new { Id = formulario.TrabajoTipo.Id });
         }
 
+        // GET: Clientes/AddFormularioDetalle
+        public async Task<IActionResult> AddFormularioDetalle(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
 
+            Formulario formulario = await _context.Formularios.FindAsync(id);
+            if (formulario == null)
+            {
+                return NotFound();
+            }
+            FormularioDetalleViewModel model = new()
+            {
+                FormularioId = formulario.Id,
+                Active = true,
+                Ponderacion=0,
+            };
+            return View(model);
+        }
+
+        // POST: Countries/AddFormularioDetalle
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddFormularioDetalle(FormularioDetalleViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    FormularioDetalle formularioDetalle = new()
+                    {
+                        Orden = model.Orden,
+                        Description = model.Description,
+                        Active = true,
+                        Ponderacion=model.Ponderacion,
+                        Formulario = await _context.Formularios.FindAsync(model.FormularioId),
+                    };
+                    _context.Add(formularioDetalle);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(DetailsFormulario), new { Id = model.FormularioId });
+                }
+                catch (DbUpdateException dbUpdateException)
+                {
+                    if (dbUpdateException.InnerException.Message.Contains("duplicada"))
+                    {
+                        ModelState.AddModelError(string.Empty, "Ya existe un Detalle con el mismo nombre en este Formulario.");
+                    }
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, dbUpdateException.InnerException.Message);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    ModelState.AddModelError(string.Empty, exception.Message);
+                }
+            }
+            return View(model);
+        }
+
+        // GET: Clientes/FormularioDetalle/5
+        public async Task<IActionResult> EditFormularioDetalle(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            FormularioDetalle formularioDetalle = await _context.FormularioDetalles
+                .Include(s => s.Formulario)
+                .FirstOrDefaultAsync(s => s.Id == id);
+            if (formularioDetalle == null)
+            {
+                return NotFound();
+            }
+
+            FormularioDetalleViewModel model = new()
+            {
+                FormularioId = formularioDetalle.Formulario.Id,
+                Id = formularioDetalle.Id,
+                Orden = formularioDetalle.Orden,
+                Description = formularioDetalle.Description,
+                Ponderacion = formularioDetalle.Ponderacion,
+                Active = formularioDetalle.Active,
+
+            };
+
+            return View(model);
+        }
+
+        // POST: Clientes/FormularioDetalle/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditFormularioDetalle(int id, FormularioDetalleViewModel model)
+        {
+            if (id != model.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    FormularioDetalle formularioDetalle = new()
+                    {
+                        Id = model.Id,
+                        Orden = model.Orden,
+                        Description = model.Description,
+                        Ponderacion = model.Ponderacion,
+                        Active =model.Active,
+                    };
+
+                    _context.Update(formularioDetalle);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(DetailsFormulario), new { Id = model.FormularioId });
+                }
+                catch (DbUpdateException dbUpdateException)
+                {
+                    if (dbUpdateException.InnerException.Message.Contains("duplicada"))
+                    {
+                        ModelState.AddModelError(string.Empty, "Ya existe un Detalle con el mismo nombre en este Formulario.");
+                    }
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, dbUpdateException.InnerException.Message);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    ModelState.AddModelError(string.Empty, exception.Message);
+                }
+            }
+            return View(model);
+        }
+
+        // GET: Clientes/DetailsFormularioDetalle/5
+        public async Task<IActionResult> DetailsFormularioDetalle(int? id)
+        {
+            if (id == null || _context.FormularioDetalles == null)
+            {
+                return NotFound();
+            }
+
+            var formulario = await _context.FormularioDetalles
+                .Include(c => c.Formulario)
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (formulario == null)
+            {
+                return NotFound();
+            }
+
+            return View(formulario);
+        }
+
+        // GET: Clientes/DeleteFormularioDetalle/5
+        public async Task<IActionResult> DeleteFormularioDetalle(int? id)
+        {
+            if (id == null || _context.FormularioDetalles == null)
+            {
+                return NotFound();
+            }
+
+            FormularioDetalle formularioDetalle = await _context.FormularioDetalles
+                .Include(c => c.Formulario)
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (formularioDetalle == null)
+            {
+                return NotFound();
+            }
+
+            return View(formularioDetalle);
+        }
+
+        // POST: Clientes/DeleteFormularioDetalle/5
+        [HttpPost, ActionName("DeleteFormularioDetalle")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteFormularioDetalleConfirmed(int id)
+        {
+            if (_context.TrabajoTipos == null)
+            {
+                return Problem("Entity set 'DataContext.FormularioDetalles'  is null.");
+            }
+            FormularioDetalle formularioDetalle = await _context.FormularioDetalles
+                 .Include(c => c.Formulario)
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (formularioDetalle != null)
+            {
+                _context.FormularioDetalles.Remove(formularioDetalle);
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(DetailsFormulario), new { Id = formularioDetalle.Formulario.Id });
+        }
 
     }
 }

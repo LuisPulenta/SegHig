@@ -1,0 +1,25 @@
+﻿@model SegHig.Models.FormularioDetalleViewModel
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h4>Crear Detalle</h4>
+<hr />
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="AddFormularioDetalle">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="FormularioId" />
+            <partial name=_FormularioDetalle/>
+            
+            <div class="form-group mt-2">
+                <input type="submit" value="Crear" class="btn btn-outline-primary btn-sm" />
+                <a asp-action="DetailsFormulario" asp-route-id="@Model.FormularioId" class="btn btn-outline-success btn-sm">Regresar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

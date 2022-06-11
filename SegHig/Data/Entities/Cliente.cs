@@ -28,6 +28,7 @@ namespace SegHig.Data.Entities
 
         [Display(Name = "Activo")]
         public bool Active { get; set; }
+        [Display(Name = "Tipos de Trabajo")]
         public ICollection<TrabajoTipo> TrabajoTipos { get; set; }
     }
 }
