@@ -54,7 +54,7 @@ namespace SegHig.Controllers
             {
                 _context.EmpresaTipos.Remove(empresaTipo);
                 await _context.SaveChangesAsync();
-                _flashMessage.Info("Registro borrado.");
+                _flashMessage.Info("Tipo de Empresa borrado.");
             }
             catch
             {
@@ -127,6 +127,29 @@ namespace SegHig.Controllers
             }
 
             return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "AddOrEdit", empresaTipo) });
+        }
+
+        public async Task<IActionResult> OnOff(int id)
+        {
+            EmpresaTipo empresaTipo = await _context.EmpresaTipos.FindAsync(id);
+            if (empresaTipo == null)
+            {
+                return NotFound();
+            }
+
+            empresaTipo.Active = !empresaTipo.Active;
+
+            _context.Update(empresaTipo);
+            await _context.SaveChangesAsync();
+            if (empresaTipo.Active)
+            {
+                _flashMessage.Info("Tipo de Empresa activado.");
+            }
+            else
+            {
+                _flashMessage.Info("Tipo de Empresa desactivado.");
+            }
+            return RedirectToAction("Index", "EmpresaTipos");
         }
 
 

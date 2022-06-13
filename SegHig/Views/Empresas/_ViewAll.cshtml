@@ -60,6 +60,15 @@
             <td>
                 <a onclick="showInPopup('@Url.Action("Edit", "Empresas", new { id=item.Id }, Context.Request.Scheme)' , 'Actualizar Empresa')" class="btn btn-sm btn-warning"><i class="fa fa-pencil-alt"></i> </a>
                 <button data-id="@item.Id" class="btn btn-sm btn-danger deleteItem" data-bs-toggle="modal" data-bs-target="#deleteDialog"><i class="fa fa-trash"></i></button>
+                @if (!item.Active)
+                     {
+                       <a asp-action="OnOff" asp-route-id="@item.Id" class="btn btn-sm btn-outline-success"><i class="fa-solid fa-toggle-on"></i></a>
+                     }
+
+                @if (item.Active)
+                     {
+                       <a asp-action="OnOff" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-toggle-off"></i></a>
+                     }
             </td>
         </tr>
         }

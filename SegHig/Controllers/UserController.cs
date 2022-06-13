@@ -156,6 +156,28 @@ namespace Shooping.Controllers
             return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "EditUser", model) });
         }
 
+        public async Task<IActionResult> DeleteUser(string id)
+        {
+            User user = await _context.Users
+                .FirstOrDefaultAsync(p => p.Id == id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            if(user.UserName==User.Identity.Name)
+            {
+                _flashMessage.Danger("No puede borrarse a sí mismo");
+                return RedirectToAction(nameof(Index));
+            }
+
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+            _flashMessage.Info("Administrador borrado.");
+            return RedirectToAction(nameof(Index));
+        }
+
+
         public async Task<IActionResult> OnOff(string id)
         {
             User user = await _userHelper.GetUserByIdAsync(id);
@@ -164,48 +186,25 @@ namespace Shooping.Controllers
                 return NotFound();
             }
 
+            if (user.UserName == User.Identity.Name)
+            {
+                _flashMessage.Danger("No puede desactivarse a sí mismo");
+                return RedirectToAction("Index", "Users");
+            }
+
             user.Active = !user.Active;
 
+            _context.Update(user);
             await _userHelper.UpdateUserAsync(user);
+            if (user.Active)
+            {
+                _flashMessage.Info("Administrador activado.");
+            }
+            else
+            {
+                _flashMessage.Info("Administrador desactivado.");
+            }
             return RedirectToAction("Index", "Users");
-        }
-
-        public async Task<IActionResult> DeleteUser(string? id)
-        {
-            if (id == null || _context.Users == null)
-            {
-                return NotFound();
-            }
-
-            var user = await _context.Users
-                .Include(e => e.Empresa)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-            return View(user);
-        }
-
-        // POST: ClienteTipos/Delete/5
-        [HttpPost, ActionName("DeleteUser")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(string id)
-        {
-            if (_context.Users == null)
-            {
-                return Problem("Entity set 'DataContext.Users'  is null.");
-            }
-            var user = await _context.Users.FirstOrDefaultAsync(m => m.Id == id);
-            if (user != null)
-            {
-                _context.Users.Remove(user);
-            }
-
-            await _context.SaveChangesAsync();
-            _flashMessage.Info("Administrador borrado.");
-            return RedirectToAction(nameof(Index));
         }
     }
 }

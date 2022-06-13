@@ -1,33 +1,40 @@
 ﻿@model SegHig.Models.EditUserViewModel
-
 @{
-    ViewData["Title"] = "Usuario";
-    Layout = null;
+    ViewData["Title"] = "Edit";
 }
-
+<flash dismissable="true" />
 <flash dismissable="true" />
 
-<div class="container smfont">
-    <form asp-action="ChangeUser" enctype="multipart/form-data" autocomplete="off" asp-route-id="@Model.Id" onsubmit="return jQueryAjaxPost(this);">
-        <div class="box-body">
+<h2>Editar</h2>
+
+<h4>Usuario</h4>
+<hr />
+<div class="row">
+    <div class="col-md-8">
+        <form asp-action="ChangeUser" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
             <input type="hidden" asp-for="EmpresaId" />
             <input type="hidden" asp-for="Empresas" />
+
             <partial name="_User" />
 
             <div class="form-group mt-2">
                 <input type="submit" value="Guardar" class="btn btn-outline-primary" />
                 <a asp-action="ChangePassword" class="btn btn-outline-secondary">Cambiar Contraseña</a>
             </div>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-sm btn-primary" data-bs-dismiss="modal"><i class="fa fa-ban"></i> Cancelar</button>
-            <button type="submit" class="btn btn-sm btn-success"><i class="fa fa-save"></i> Guardar</button>
-        </div>
-    </form>
+        </form>
+    </div>
 </div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $("#EmpresaId").change(function () {
+                debugger;
+                return false;
+            })
+        });
+    </script>
 }

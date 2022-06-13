@@ -6,6 +6,7 @@ using SegHig.Data.Entities;
 using SegHig.Helpers;
 using SegHig.Models;
 using Vereyon.Web;
+using static SegHig.Helpers.ModalHelper;
 
 namespace SegHig.Controllers
 {
@@ -64,6 +65,7 @@ namespace SegHig.Controllers
         // GET: Clientes/Create
 
 
+        [NoDirectAccess]
         public async Task<IActionResult> Create()
         {
             ClienteViewModel model = new ClienteViewModel
@@ -98,7 +100,11 @@ namespace SegHig.Controllers
                     _context.Add(Cliente);
                     await _context.SaveChangesAsync();
                     _flashMessage.Info("Cliente creado.");
-                    return RedirectToAction(nameof(Index));
+                    return Json(new
+                    {
+                        isValid = true,
+                        html = ModalHelper.RenderRazorViewToString(this, "_ViewAllClientes", _context.Empresas.ToList())
+                    });
                 }
                 catch (DbUpdateException dbUpdateException)
                 {
@@ -118,10 +124,11 @@ namespace SegHig.Controllers
 
             }
             model.ClienteTipos = await _combosHelper.GetComboClienteTiposAsync();
-            return View(model);
+            return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "Create", model) });
         }
 
         // GET: Clientes/Edit/5
+        [NoDirectAccess]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null || _context.Clientes == null)
@@ -173,7 +180,13 @@ namespace SegHig.Controllers
                     _context.Update(Cliente);
                     await _context.SaveChangesAsync();
                     _flashMessage.Info("Cliente actualizado.");
-                    return RedirectToAction(nameof(Index));
+                    return Json(new
+                    {
+                        isValid = true,
+                        html = ModalHelper.RenderRazorViewToString(this, "_ViewAllClientes", _context.Empresas
+                        .Include(p => p.Users)
+                        .ToList())
+                    });
                 }
                 catch (DbUpdateException dbUpdateException)
                 {
@@ -193,49 +206,92 @@ namespace SegHig.Controllers
 
             }
             model.ClienteTipos = await _combosHelper.GetComboClienteTiposAsync();
-            return View(model);
-            //return RedirectToAction(nameof(Index));
+            return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "Edit", model) });
         }
 
-        // GET: Clientes/Delete/5
+        [NoDirectAccess]
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null || _context.Clientes == null)
-            {
-                return NotFound();
-            }
-
-            var ClienteTipo = await _context.Clientes
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (ClienteTipo == null)
-            {
-                return NotFound();
-            }
-
-            return View(ClienteTipo);
-        }
-
-        // POST: Clientes/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            if (_context.Clientes == null)
-            {
-                return Problem("Entity set 'DataContext.Clientes'  is null.");
-            }
-            var cliente = await _context.Clientes
-                .Include(t => t.TrabajoTipos)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (cliente != null)
+            Cliente cliente = await _context.Clientes.FirstOrDefaultAsync(c => c.Id == id);
+            try
             {
                 _context.Clientes.Remove(cliente);
+                await _context.SaveChangesAsync();
+                _flashMessage.Info("Cliente borrado.");
+            }
+            catch
+            {
+                _flashMessage.Danger("No se puede borrar el Cliente porque tiene registros relacionados.");
             }
 
-            await _context.SaveChangesAsync();
-            _flashMessage.Info("Cliente borrado.");
             return RedirectToAction(nameof(Index));
         }
+
+        [NoDirectAccess]
+        public async Task<IActionResult> AddOrEdit(int id = 0)
+        {
+            if (id == 0)
+            {
+                return View(new Cliente());
+            }
+            else
+            {
+                Cliente cliente = await _context.Clientes.FindAsync(id);
+                if (cliente == null)
+                {
+                    return NotFound();
+                }
+
+                return View(cliente);
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddOrEdit(int id, Cliente cliente)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    if (id == 0) //Insert
+                    {
+                        _context.Add(cliente);
+                        await _context.SaveChangesAsync();
+                        _flashMessage.Info("Cliente creado.");
+                    }
+                    else //Update
+                    {
+                        _context.Update(cliente);
+                        await _context.SaveChangesAsync();
+                        _flashMessage.Info("Cliente actualizado.");
+                    }
+                }
+                catch (DbUpdateException dbUpdateException)
+                {
+                    if (dbUpdateException.InnerException.Message.Contains("duplicada"))
+                    {
+                        _flashMessage.Danger("Ya existe un Cliente con el mismo nombre.");
+                    }
+                    else
+                    {
+                        _flashMessage.Danger(dbUpdateException.InnerException.Message);
+                    }
+                    return View(cliente);
+                }
+                catch (Exception exception)
+                {
+                    _flashMessage.Danger(exception.Message);
+                    return View(cliente);
+                }
+
+                return Json(new { isValid = true, html = ModalHelper.RenderRazorViewToString(this, "_ViewAllClientes", _context.Clientes.Include(c => c.TrabajoTipos).ToList()) });
+
+            }
+
+            return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "AddOrEdit", cliente) });
+        }
+
 
         private bool ClienteTipoExists(int id)
         {
@@ -243,6 +299,7 @@ namespace SegHig.Controllers
         }
 
         // GET: Clientes/AddTipoTrabajo
+        [NoDirectAccess]
         public async Task<IActionResult> AddTipoTrabajo(int? id)
         {
             if (id == null)
@@ -281,28 +338,36 @@ namespace SegHig.Controllers
                     };
                     _context.Add(trabajoTipo);
                     await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Details), new { Id = model.ClienteId });
+                    Cliente cliente = await _context.Clientes
+                        .Include(c => c.TrabajoTipos)
+                        .ThenInclude(s => s.Formularios)
+                        .FirstOrDefaultAsync(c => c.Id == model.ClienteId);
+                    _flashMessage.Info("Tipo de Trabajo creado.");
+                    return Json(new { isValid = true, html = ModalHelper.RenderRazorViewToString(this, "_ViewAllTrabajoTipos", trabajoTipo) });
+
+
                 }
                 catch (DbUpdateException dbUpdateException)
                 {
                     if (dbUpdateException.InnerException.Message.Contains("duplicada"))
                     {
-                        ModelState.AddModelError(string.Empty, "Ya existe un Tipo de Trabajo con el mismo nombre en este Cliente.");
+                        _flashMessage.Danger("Ya existe un Tipo de Trabajo con el mismo nombre en este Cliente.");
                     }
                     else
                     {
-                        ModelState.AddModelError(string.Empty, dbUpdateException.InnerException.Message);
+                        _flashMessage.Danger(dbUpdateException.InnerException.Message);
                     }
                 }
                 catch (Exception exception)
                 {
-                    ModelState.AddModelError(string.Empty, exception.Message);
+                    _flashMessage.Danger(exception.Message);
                 }
             }
-            return View(model);
+            return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "AddTipoTrabajo", model) });
         }
 
         // GET: Clientes/TrabajoTipo/5
+        [NoDirectAccess]
         public async Task<IActionResult> EditTrabajoTipo(int? id)
         {
             if (id == null)
@@ -354,25 +419,30 @@ namespace SegHig.Controllers
 
                     _context.Update(trabajoTipo);
                     await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Details), new { Id = model.ClienteId });
+                    Cliente cliente = await _context.Clientes
+                       .Include(c => c.TrabajoTipos)
+                       .ThenInclude(s => s.Formularios)
+                       .FirstOrDefaultAsync(c => c.Id == model.ClienteId);
+                    _flashMessage.Info("Tipo de Trabajo actualizado.");
+                    return Json(new { isValid = true, html = ModalHelper.RenderRazorViewToString(this, "_ViewAllTrabajoTipos", trabajoTipo) });
                 }
                 catch (DbUpdateException dbUpdateException)
                 {
                     if (dbUpdateException.InnerException.Message.Contains("duplicada"))
                     {
-                        ModelState.AddModelError(string.Empty, "Ya existe un Tipo de Trabajo con el mismo nombre en este Cliente.");
+                        _flashMessage.Danger("Ya existe un Tipo de Trabajo con el mismo nombre en este Cliente.");
                     }
                     else
                     {
-                        ModelState.AddModelError(string.Empty, dbUpdateException.InnerException.Message);
+                        _flashMessage.Danger(dbUpdateException.InnerException.Message);
                     }
                 }
                 catch (Exception exception)
                 {
-                    ModelState.AddModelError(string.Empty, exception.Message);
+                    _flashMessage.Danger(exception.Message);
                 }
             }
-            return View(model);
+            return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "EditTrabajoTipo", model) });
         }
 
         // GET: Clientes/DetailsTrabajoTipo/5
@@ -396,52 +466,36 @@ namespace SegHig.Controllers
             return View(trabajoTipo);
         }
 
-        // GET: Clientes/DeleteTrabajoTipo/5
-        public async Task<IActionResult> DeleteTrabajoTipo(int? id)
+        [NoDirectAccess]
+        public async Task<IActionResult> DeleteTrabajoTipo(int id)
         {
-            if (id == null || _context.TrabajoTipos == null)
-            {
-                return NotFound();
-            }
-
             TrabajoTipo trabajoTipo = await _context.TrabajoTipos
-                .Include(c => c.Cliente)
-                .Include(c => c.Formularios)
-                .ThenInclude(c => c.FormularioDetalles)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .Include(s => s.Cliente)
+                .Include(s => s.Formularios)
+                .FirstOrDefaultAsync(s => s.Id == id);
             if (trabajoTipo == null)
             {
                 return NotFound();
             }
 
-            return View(trabajoTipo);
-        }
-
-        // POST: Clientes/DeleteTrabajoTipo/5
-        [HttpPost, ActionName("DeleteTrabajoTipo")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteTrabajoTipoConfirmed(int id)
-        {
-            if (_context.TrabajoTipos == null)
-            {
-                return Problem("Entity set 'DataContext.TrabajoTipos'  is null.");
-            }
-            TrabajoTipo trabajoTipo = await _context.TrabajoTipos
-                .Include(c => c.Cliente)
-               .Include(c => c.Formularios)
-                .ThenInclude(c => c.FormularioDetalles)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (trabajoTipo != null)
+            try
             {
                 _context.TrabajoTipos.Remove(trabajoTipo);
+                await _context.SaveChangesAsync();
+                _flashMessage.Info("Tipo de Trabajo borrado.");
+            }
+            catch
+            {
+                _flashMessage.Danger("No se puede borrar el Tipo de Trabajo porque tiene registros relacionados.");
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Details), new { Id = trabajoTipo.Cliente.Id });
         }
 
 
+
         // GET: Clientes/AddFormulario
+        [NoDirectAccess]
         public async Task<IActionResult> AddFormulario(int? id)
         {
             if (id == null)
@@ -480,28 +534,35 @@ namespace SegHig.Controllers
                     };
                     _context.Add(formulario);
                     await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(DetailsTrabajoTipo), new { Id = model.TrabajoTipoId });
+                    TrabajoTipo trabajoTipo = await _context.TrabajoTipos
+                        .Include(c => c.Cliente)
+                        .Include(c => c.Formularios)
+                        .ThenInclude(s => s.FormularioDetalles)
+                        .FirstOrDefaultAsync(c => c.Id == model.TrabajoTipoId);
+                    _flashMessage.Info("Formulario creado.");
+                    return Json(new { isValid = true, html = ModalHelper.RenderRazorViewToString(this, "_ViewAllFormularios", trabajoTipo) });
                 }
                 catch (DbUpdateException dbUpdateException)
                 {
                     if (dbUpdateException.InnerException.Message.Contains("duplicada"))
                     {
-                        ModelState.AddModelError(string.Empty, "Ya existe un Formulario con el mismo nombre en este Tipo de Trabajo.");
+                        _flashMessage.Info("Ya existe un Formulario con el mismo nombre en este Tipo de Trabajo.");
                     }
                     else
                     {
-                        ModelState.AddModelError(string.Empty, dbUpdateException.InnerException.Message);
+                        _flashMessage.Info(dbUpdateException.InnerException.Message);
                     }
                 }
                 catch (Exception exception)
                 {
-                    ModelState.AddModelError(string.Empty, exception.Message);
+                    _flashMessage.Info(string.Empty, exception.Message);
                 }
             }
-            return View(model);
+            return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "AddFormulario", model) });
         }
 
         // GET: Clientes/Formulario/5
+        [NoDirectAccess]
         public async Task<IActionResult> EditFormulario(int? id)
         {
             if (id == null)
@@ -554,28 +615,36 @@ namespace SegHig.Controllers
 
                     _context.Update(formulario);
                     await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(DetailsTrabajoTipo), new { Id = model.TrabajoTipoId });
+                    TrabajoTipo trabajoTipo = await _context.TrabajoTipos
+                       .Include(c => c.Cliente)
+                       .Include(c => c.Formularios)
+                       .ThenInclude(s => s.FormularioDetalles)
+                       .FirstOrDefaultAsync(c => c.Id == model.TrabajoTipoId);
+                    _flashMessage.Info("Formulario actualizado.");
+                    return Json(new { isValid = true, html = ModalHelper.RenderRazorViewToString(this, "_ViewAllFormularios", trabajoTipo) });
                 }
                 catch (DbUpdateException dbUpdateException)
                 {
                     if (dbUpdateException.InnerException.Message.Contains("duplicada"))
                     {
-                        ModelState.AddModelError(string.Empty, "Ya existe un Formulario con el mismo nombre en este Tipo de Trabajo.");
+                        _flashMessage.Danger("Ya existe un Formulario con el mismo nombre en este Tipo de Trabajo.");
                     }
                     else
                     {
-                        ModelState.AddModelError(string.Empty, dbUpdateException.InnerException.Message);
+                        _flashMessage.Danger(dbUpdateException.InnerException.Message);
                     }
                 }
                 catch (Exception exception)
                 {
-                    ModelState.AddModelError(string.Empty, exception.Message);
+                    _flashMessage.Danger(exception.Message);
                 }
             }
-            return View(model);
+            return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "EditFormulario", model) });
         }
 
         // GET: Clientes/DetailsFormulario/5
+
+
         public async Task<IActionResult> DetailsFormulario(int? id)
         {
             if (id == null || _context.Formularios == null)
@@ -595,49 +664,35 @@ namespace SegHig.Controllers
             return View(formulario);
         }
 
-        // GET: Clientes/DeleteFormulario/5
-        public async Task<IActionResult> DeleteFormulario(int? id)
+        [NoDirectAccess]
+        public async Task<IActionResult> DeleteFormulario(int id)
         {
-            if (id == null || _context.Formularios == null)
-            {
-                return NotFound();
-            }
-
-            Formulario formulario = await _context.Formularios
-                .Include(c => c.TrabajoTipo)
-                .Include(c => c.FormularioDetalles)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            Formulario formulario= await _context.Formularios
+                .Include(s => s.TrabajoTipo)
+                .Include(s => s.FormularioDetalles)
+                .FirstOrDefaultAsync(s => s.Id == id);
             if (formulario == null)
             {
                 return NotFound();
             }
 
-            return View(formulario);
-        }
-
-        // POST: Clientes/DeleteFormulario/5
-        [HttpPost, ActionName("DeleteFormulario")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteFormularioConfirmed(int id)
-        {
-            if (_context.TrabajoTipos == null)
-            {
-                return Problem("Entity set 'DataContext.Formularios'  is null.");
-            }
-            Formulario formulario = await _context.Formularios
-                 .Include(c => c.TrabajoTipo)
-                .Include(c => c.FormularioDetalles)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (formulario != null)
+            try
             {
                 _context.Formularios.Remove(formulario);
+                await _context.SaveChangesAsync();
+                _flashMessage.Info("Formulario borrado.");
             }
-
-            await _context.SaveChangesAsync();
+            catch
+            {
+                _flashMessage.Danger("No se puede borrar el Formulario porque tiene registros relacionados.");
+            }
             return RedirectToAction(nameof(DetailsTrabajoTipo), new { Id = formulario.TrabajoTipo.Id });
         }
+ 
 
         // GET: Clientes/AddFormularioDetalle
+
+        [NoDirectAccess]
         public async Task<IActionResult> AddFormularioDetalle(int? id)
         {
             if (id == null)
@@ -678,28 +733,35 @@ namespace SegHig.Controllers
                     };
                     _context.Add(formularioDetalle);
                     await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(DetailsFormulario), new { Id = model.FormularioId });
+                    Formulario formulario = await _context.Formularios
+                       .Include(c => c.TrabajoTipo)
+                       .Include(c => c.FormularioDetalles)
+                       .FirstOrDefaultAsync(c => c.Id == model.FormularioId);
+                    _flashMessage.Info("Detalle creado.");
+                    return Json(new { isValid = true, html = ModalHelper.RenderRazorViewToString(this, "_ViewAllFormularioDetalles", formulario) });
                 }
                 catch (DbUpdateException dbUpdateException)
                 {
                     if (dbUpdateException.InnerException.Message.Contains("duplicada"))
                     {
-                        ModelState.AddModelError(string.Empty, "Ya existe un Detalle con el mismo nombre en este Formulario.");
+                        _flashMessage.Danger("Ya existe un Detalle con el mismo nombre en este Formulario.");
                     }
                     else
                     {
-                        ModelState.AddModelError(string.Empty, dbUpdateException.InnerException.Message);
+                        _flashMessage.Danger(dbUpdateException.InnerException.Message);
                     }
                 }
                 catch (Exception exception)
                 {
-                    ModelState.AddModelError(string.Empty, exception.Message);
+                    _flashMessage.Danger(exception.Message);
                 }
             }
-            return View(model);
+            return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "AddFormularioDetalle", model) });
         }
 
         // GET: Clientes/FormularioDetalle/5
+
+        [NoDirectAccess]
         public async Task<IActionResult> EditFormularioDetalle(int? id)
         {
             if (id == null)
@@ -754,25 +816,30 @@ namespace SegHig.Controllers
 
                     _context.Update(formularioDetalle);
                     await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(DetailsFormulario), new { Id = model.FormularioId });
+                    Formulario formulario = await _context.Formularios
+                       .Include(c => c.TrabajoTipo)
+                       .Include(s => s.FormularioDetalles)
+                       .FirstOrDefaultAsync(c => c.Id == model.FormularioId);
+                    _flashMessage.Info("Formulario actualizado.");
+                    return Json(new { isValid = true, html = ModalHelper.RenderRazorViewToString(this, "_ViewAllFormularioDetalles", formulario) });
                 }
                 catch (DbUpdateException dbUpdateException)
                 {
                     if (dbUpdateException.InnerException.Message.Contains("duplicada"))
                     {
-                        ModelState.AddModelError(string.Empty, "Ya existe un Detalle con el mismo nombre en este Formulario.");
+                        _flashMessage.Danger("Ya existe un Detalle con la misma descripción en este Formulario.");
                     }
                     else
                     {
-                        ModelState.AddModelError(string.Empty, dbUpdateException.InnerException.Message);
+                        _flashMessage.Danger(dbUpdateException.InnerException.Message);
                     }
                 }
                 catch (Exception exception)
                 {
-                    ModelState.AddModelError(string.Empty, exception.Message);
+                    _flashMessage.Danger(exception.Message);
                 }
             }
-            return View(model);
+            return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "EditFormularioDetalle", model) });
         }
 
         // GET: Clientes/DetailsFormularioDetalle/5
@@ -783,26 +850,7 @@ namespace SegHig.Controllers
                 return NotFound();
             }
 
-            var formulario = await _context.FormularioDetalles
-                .Include(c => c.Formulario)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (formulario == null)
-            {
-                return NotFound();
-            }
-
-            return View(formulario);
-        }
-
-        // GET: Clientes/DeleteFormularioDetalle/5
-        public async Task<IActionResult> DeleteFormularioDetalle(int? id)
-        {
-            if (id == null || _context.FormularioDetalles == null)
-            {
-                return NotFound();
-            }
-
-            FormularioDetalle formularioDetalle = await _context.FormularioDetalles
+            var formularioDetalle = await _context.FormularioDetalles
                 .Include(c => c.Formulario)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (formularioDetalle == null)
@@ -813,24 +861,126 @@ namespace SegHig.Controllers
             return View(formularioDetalle);
         }
 
-        // POST: Clientes/DeleteFormularioDetalle/5
-        [HttpPost, ActionName("DeleteFormularioDetalle")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteFormularioDetalleConfirmed(int id)
+        [NoDirectAccess]
+        public async Task<IActionResult> DeleteFormularioDetalle(int id)
         {
-            if (_context.TrabajoTipos == null)
-            {
-                return Problem("Entity set 'DataContext.FormularioDetalles'  is null.");
-            }
             FormularioDetalle formularioDetalle = await _context.FormularioDetalles
-                 .Include(c => c.Formulario)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (formularioDetalle != null)
+                .Include(s => s.Formulario)
+                .FirstOrDefaultAsync(s => s.Id == id);
+            if (formularioDetalle == null)
             {
-                _context.FormularioDetalles.Remove(formularioDetalle);
+                return NotFound();
             }
 
+            try
+            {
+                _context.FormularioDetalles.Remove(formularioDetalle);
+                await _context.SaveChangesAsync();
+                _flashMessage.Info("Detalle borrado.");
+            }
+            catch
+            {
+                _flashMessage.Danger("No se puede borrar el Detalle porque tiene registros relacionados.");
+            }
+            return RedirectToAction(nameof(DetailsFormulario), new { Id = formularioDetalle.Formulario.Id });
+        }
+
+
+        public async Task<IActionResult> OnOff(int id)
+        {
+            Cliente cliente = await _context.Clientes.FindAsync(id);
+            if (cliente == null)
+            {
+                return NotFound();
+            }
+
+            cliente.Active = !cliente.Active;
+
+            _context.Update(cliente);
             await _context.SaveChangesAsync();
+            if (cliente.Active)
+            {
+                _flashMessage.Info("Cliente activado.");
+            }
+            else
+            {
+                _flashMessage.Info("Cliente desactivado.");
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<IActionResult> OnOffTrabajoTipo(int id)
+        {
+            TrabajoTipo trabajoTipo = await _context.TrabajoTipos
+                .Include(t=> t.Cliente)
+                .FirstOrDefaultAsync(s => s.Id == id);
+            if (trabajoTipo == null)
+            {
+                return NotFound();
+            }
+
+            trabajoTipo.Active = !trabajoTipo.Active;
+
+            _context.Update(trabajoTipo);
+            await _context.SaveChangesAsync();
+            if (trabajoTipo.Active)
+            {
+                _flashMessage.Info("Tipo de Trabajo activado.");
+            }
+            else
+            {
+                _flashMessage.Info("Tipo de Trabajo desactivado.");
+            }
+            return RedirectToAction(nameof(Details), new { Id = trabajoTipo.Cliente.Id });
+        }
+
+        public async Task<IActionResult> OnOffFormulario(int id)
+        {
+            Formulario formulario = await _context.Formularios
+                .Include(t => t.TrabajoTipo)
+                .FirstOrDefaultAsync(s => s.Id == id);
+            if (formulario == null)
+            {
+                return NotFound();
+            }
+
+            formulario.Active = !formulario.Active;
+
+            _context.Update(formulario);
+            await _context.SaveChangesAsync();
+            if (formulario.Active)
+            {
+                _flashMessage.Info("Formulario activado.");
+            }
+            else
+            {
+                _flashMessage.Info("Formulario desactivado.");
+            }
+            return RedirectToAction(nameof(DetailsTrabajoTipo), new { Id = formulario.TrabajoTipo.Id });
+        }
+
+        public async Task<IActionResult> OnOffFormularioDetalle(int id)
+        {
+            FormularioDetalle formularioDetalle = await _context.FormularioDetalles
+                .Include(t => t.Formulario)
+                .FirstOrDefaultAsync(s => s.Id == id);
+            if (formularioDetalle == null)
+            {
+                return NotFound();
+            }
+
+            formularioDetalle.Active = !formularioDetalle.Active;
+
+            _context.Update(formularioDetalle);
+            await _context.SaveChangesAsync();
+            if (formularioDetalle.Active)
+            {
+                _flashMessage.Info("Detalle activado.");
+            }
+            else
+            {
+                _flashMessage.Info("Detalle desactivado.");
+            }
             return RedirectToAction(nameof(DetailsFormulario), new { Id = formularioDetalle.Formulario.Id });
         }
 

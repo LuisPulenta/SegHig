@@ -1,23 +1,24 @@
 ﻿@model SegHig.Models.FormularioViewModel
+
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Formulario";
+    Layout = null;
 }
 
-<h4>Crear Formulario</h4>
-<hr />
-<div class="row">
-    <div class="col-md-12">
-        <form asp-action="AddFormulario">
+<flash dismissable="true" />
+
+<div class="container smfont">
+    <form asp-action="AddFormulario" autocomplete="off" asp-route-id="@Model.Id" onsubmit="return jQueryAjaxPost(this);">
+        <div class="box-body">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="TrabajoTipoId" />
-            <partial name=_Formulario/>
-            
-            <div class="form-group mt-2">
-                <input type="submit" value="Crear" class="btn btn-outline-primary btn-sm" />
-                <a asp-action="DetailsTrabajoTipo" asp-route-id="@Model.TrabajoTipoId" class="btn btn-outline-success btn-sm">Regresar</a>
-            </div>
-        </form>
-    </div>
+            <partial name="_Formulario" />
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-sm btn-primary" data-bs-dismiss="modal"><i class="fa fa-ban"></i> Cancelar</button>
+            <button type="submit" class="btn btn-sm btn-success"><i class="fa fa-save"></i> Guardar</button>
+        </div>
+    </form>
 </div>
 
 @section Scripts {

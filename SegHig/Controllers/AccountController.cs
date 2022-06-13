@@ -274,20 +274,6 @@ namespace SegHig.Controllers
             return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "EditUser", model) });
         }
 
-        public async Task<IActionResult> OnOff(string id)
-        {
-            User user = await _userHelper.GetUserByIdAsync(id);
-            if (user == null)
-            {
-                return NotFound();
-            }
-  
-                user.Active = !user.Active;
-
-                await _userHelper.UpdateUserAsync(user);
-                return RedirectToAction("Index", "Account");
-        }
-
         public async Task<IActionResult> DeleteUser(string id)
         {
             User user = await _context.Users
@@ -299,7 +285,7 @@ namespace SegHig.Controllers
 
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
-            _flashMessage.Info("Registro borrado.");
+            _flashMessage.Info("Usuario borrado.");
             return RedirectToAction(nameof(Index));
         }
 
@@ -425,5 +411,27 @@ namespace SegHig.Controllers
             return View(model);
         }
 
+        public async Task<IActionResult> OnOff(string id)
+        {
+            User user = await _userHelper.GetUserByIdAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            user.Active = !user.Active;
+
+            _context.Update(user);
+            await _userHelper.UpdateUserAsync(user);
+            if (user.Active)
+            {
+                _flashMessage.Info("Usuario activado.");
+            }
+            else
+            {
+                _flashMessage.Info("Usuario desactivado.");
+            }
+            return RedirectToAction("Index", "Account");
+        }
     }
 }

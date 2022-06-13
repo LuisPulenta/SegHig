@@ -4,28 +4,31 @@
     ViewData["Title"] = "Details";
 }
 
+<flash dismissable="true" />
 
+<h1>Detalles</h1>
 
 <div>
-    <h4>Detalle</h4>
-    <hr />
-    <partial name=_FormularioDetalleDetails/>
-</div>
-<div>
-    <a asp-action="EditFormularioDetalle" asp-route-id="@Model?.Id" class="btn btn-outline-warning btn-sm" >Editar Detalle</a>
-    <a asp-action="DetailsFormulario" asp-route-id="@Model?.Formulario.Id" class="btn btn-outline-success btn-sm">Regresar</a>
+    <partial name="_FormularioDetalleDetails" />    
 </div>
 
+<div>
+    <a asp-action="DetailsFormulario"  asp-route-id="@Model?.Formulario.Id" class="btn btn-outline-success"><i class="fa-solid fa-arrow-rotate-left"></i> Regresar</a>
+</div>
 <hr />
 
- 
+
+<partial name="_AddOrEditDialog" />
+<partial name="_DeleteDialog" />
+
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-    
+
+    <script src="~/js/showmodal.js"></script>
 
     <script type="text/javascript">
         $(document).ready(function () {
-            $('#MyTable').DataTable({
+            $('#FormularioDetallesTable').DataTable({
                 "language": {
                     "url": "//cdn.datatables.net/plug-ins/9dcbecd42ad/i18n/Spanish.json"
                 },
@@ -35,5 +38,9 @@
                 ]
             });
         });
+    </script>
+
+    <script>
+        sc_deleteDialog.openModal('deleteItem', true, 'btnYesDelete', '/Countries/DeleteState/', false);
     </script>
 }

@@ -190,7 +190,6 @@ namespace SegHig.Controllers
             }
             model.EmpresaTipos = await _combosHelper.GetComboEmpresaTiposAsync();
             return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "Edit", model) });
-            //return RedirectToAction(nameof(Index));
         }
 
         // GET: Empresas/Delete/5
@@ -206,8 +205,31 @@ namespace SegHig.Controllers
 
             _context.Empresas.Remove(empresa);
             await _context.SaveChangesAsync();
-            _flashMessage.Info("Registro borrado.");
+            _flashMessage.Info("Empresa borrada.");
             return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<IActionResult> OnOff(int id)
+        {
+            Empresa empresa = await _context.Empresas.FindAsync(id);
+            if (empresa == null)
+            {
+                return NotFound();
+            }
+
+            empresa.Active = !empresa.Active;
+
+            _context.Update(empresa);
+            await _context.SaveChangesAsync();
+            if (empresa.Active)
+            {
+                _flashMessage.Info("Empresa activada.");
+            }
+            else
+            {
+                _flashMessage.Info("Empresa desactivada.");
+            }
+            return RedirectToAction("Index", "Empresas");
         }
 
     }

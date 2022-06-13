@@ -1,21 +1,25 @@
 ﻿@model SegHig.Models.FormularioDetalleViewModel
 
 <div class="form-group">
-    <span class="required">*</span>
+    
+     <span class="required">*</span>
      <label asp-for="Orden" class="control-label"></label>
      <input asp-for="Orden" class="form-control" />
      <span asp-validation-for="Orden" class="text-danger"></span>
 
+     
      <span class="required">*</span>
      <label asp-for="Description" class="control-label"></label>
      <textarea asp-for="Description" class="form-control" ></textarea>
      <span asp-validation-for="Description" class="text-danger"></span>
      
      <div class="form-group">
+     <span class="required">*</span>
     <label asp-for="Ponderacion" class="control-label"></label>
     <input asp-for="Ponderacion" class="form-control" />
     <span asp-validation-for="Ponderacion" class="text-danger"></span>
 </div>
+     <span class="required">*</span>
      <div class="form-group form-check">
                 <label class="form-check-label">
                     <input class="form-check-input" asp-for="Active" /> @Html.DisplayNameFor(model => model.Active)

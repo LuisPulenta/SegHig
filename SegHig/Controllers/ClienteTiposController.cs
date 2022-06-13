@@ -55,7 +55,7 @@ namespace SegHig.Controllers
             {
                 _context.ClienteTipos.Remove(ClienteTipo);
                 await _context.SaveChangesAsync();
-                _flashMessage.Info("Registro borrado.");
+                _flashMessage.Info("Tipo de Cliente borrado.");
             }
             catch
             {
@@ -128,6 +128,29 @@ namespace SegHig.Controllers
             }
 
             return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "AddOrEdit", ClienteTipo) });
+        }
+
+        public async Task<IActionResult> OnOff(int id)
+        {
+            ClienteTipo clienteTipo = await _context.ClienteTipos.FindAsync(id);
+            if (clienteTipo == null)
+            {
+                return NotFound();
+            }
+
+            clienteTipo.Active = !clienteTipo.Active;
+
+            _context.Update(clienteTipo);
+            await _context.SaveChangesAsync();
+            if(clienteTipo.Active)
+            {
+                _flashMessage.Info("Tipo de Cliente activado.");
+            }
+            else
+            {
+                _flashMessage.Info("Tipo de Cliente desactivado.");
+            }
+            return RedirectToAction("Index", "ClienteTipos");
         }
 
     }

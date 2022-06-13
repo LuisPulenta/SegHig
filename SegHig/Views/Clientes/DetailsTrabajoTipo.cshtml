@@ -4,87 +4,44 @@
     ViewData["Title"] = "Details";
 }
 
+<flash dismissable="true" />
 
+<h1>Tipo de Trabajo</h1>
 
 <div>
-    <h4>Tipo de Trabajo</h4>
-    <hr />
-    <partial name=_TrabajoTipoDetails/>
-</div>
-<div>
-    <a asp-action="AddFormulario" asp-route-id="@Model?.Id" class="btn btn-outline-primary btn-sm" >Agregar Formulario</a>
-    <a asp-action="EditTrabajoTipo" asp-route-id="@Model?.Id" class="btn btn-outline-warning btn-sm" >Editar Tipo de Trabajo</a>
-    <a asp-action="Details" asp-route-id="@Model?.Cliente.Id" class="btn btn-outline-success btn-sm">Regresar</a>
+    <partial name="_TrabajoTipoDetails" />    
 </div>
 
+<div>
+    <a asp-action="Details" asp-route-id="@Model?.Cliente.Id" class="btn btn-outline-success"><i class="fa-solid fa-arrow-rotate-left"></i> Regresar</a>
+</div>
 <hr />
 
- <div class="row">
-    <div class="col-md-12">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">Formularios</h3>
-            </div>
-            <div class="panel-body">
-                <table class="table table-hover table-responsive table-striped" id="MyTable">
-
-
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Formularios.FirstOrDefault().Orden)
-            </th>
-             <th>
-                @Html.DisplayNameFor(model => model.Formularios.FirstOrDefault().Name)
-            </th>
-             <th>
-                Detalles
-            </th>
-             <th>
-                @Html.DisplayNameFor(model => model.Active)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model.Formularios) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Orden)
-            </td>
-             <td>
-                @Html.DisplayFor(modelItem => item.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.FormularioDetalles.Count)
-            </td>
-             <td>
-                @Html.DisplayFor(modelItem => item.Active)
-            </td>
-            <td>
-                <a asp-action="EditFormulario" asp-route-id="@item.Id" class="btn btn-outline-warning"><i class="fa-solid fa-pen-to-square"></i></a>
-                <a asp-action="DetailsFormulario" asp-route-id="@item.Id" class="btn btn-outline-info"><i class="fa-solid fa-circle-info"></i></a>
-                <a asp-action="DeleteFormulario" asp-route-id="@item.Id" class="btn btn-outline-danger"><i class="fa-solid fa-trash"></i></a>
-            </td>
-        </tr>
-}
-    </tbody>
-
-@*</table>*@
-
-                </table>
+<!-- Content Wrapper. Contains page content -->
+<div class="container-fluid">
+    <div class="card mt-2">
+        <div class="card-header text-danger">
+            <i class="fa fa-globe"></i>  <strong>Formularios</strong>
+        </div>
+        <div class="card-body">
+            <div id="view-all">
+                @await Html.PartialAsync("_ViewAllFormularios", Model)
             </div>
         </div>
     </div>
 </div>
 
+<partial name="_AddOrEditDialog" />
+<partial name="_DeleteDialog" />
+
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-    
+
+    <script src="~/js/showmodal.js"></script>
 
     <script type="text/javascript">
         $(document).ready(function () {
-            $('#MyTable').DataTable({
+            $('#FormulariosTable').DataTable({
                 "language": {
                     "url": "//cdn.datatables.net/plug-ins/9dcbecd42ad/i18n/Spanish.json"
                 },
@@ -95,5 +52,8 @@
             });
         });
     </script>
-}
 
+    <script>
+        sc_deleteDialog.openModal('deleteItem', true, 'btnYesDelete', '/Clientes/DeleteFormulario/', false);
+    </script>
+}
