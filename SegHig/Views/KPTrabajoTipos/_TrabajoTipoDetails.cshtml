@@ -1,0 +1,30 @@
+﻿@model SegHig.Data.Entities.KPTrabajoTipo
+
+ <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Orden)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Orden)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Name)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Name)
+        </dd>
+
+        <dt class = "col-sm-2">
+            Formularios
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.KPFormularios.Count)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Active)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Active)
+        </dd>
+
+ </dl>

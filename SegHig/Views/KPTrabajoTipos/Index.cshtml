@@ -1,0 +1,62 @@
+﻿@model IEnumerable<SegHig.Data.Entities.KPTrabajoTipo>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<flash dismissable="true" />
+
+<!-- Content Wrapper. Contains page content -->
+<div class="container-fluid">
+    <div class="card mt-2">
+        <div class="card-header text-danger">
+            <i class="fa fa-shopping-bag"></i>  <strong>Tipos de Trabajo</strong>
+        </div>
+        <div class="card-body">
+            <div id="view-all">
+                @await Html.PartialAsync("_ViewAllKPTrabajoTipos", Model)
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--modal placeholder. Also you can place this modal form in the _Layout.cshtml-->
+<div class="modal fade in" tabindex="-1" role="dialog" data-bs-backdrop="static" id="form-modal">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary">
+                <h5 class="modal-title text-white"></h5>
+                <button type="button" class="btn-close text-white" data-bs-dismiss="modal" aria-label="Close">                   
+                </button>
+            </div>
+            <div class="modal-body">
+            </div>
+        </div>
+    </div>
+</div>
+
+<partial name="_DeleteDialog" />
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script src="~/js/showmodal.js"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#KPTrabajoTiposTable').DataTable({
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/9dcbecd42ad/i18n/Spanish.json"
+                },
+                "aLengthMenu": [
+                    [25, 50, 100, 200, -1],
+                    [25, 50, 100, 200, "Todos"]
+                ]
+            });
+        });
+    </script>
+
+    <script>
+        sc_deleteDialog.openModal('deleteItem', true, 'btnYesDelete', '/KPTrabajoTipos/DeleteTrabajoTipo/', false);
+    </script>
+}

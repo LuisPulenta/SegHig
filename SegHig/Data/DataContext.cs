@@ -18,6 +18,9 @@ namespace SegHig.Data
         public DbSet<TrabajoTipo> TrabajoTipos { get; set; }
         public DbSet<Formulario> Formularios { get; set; }
         public DbSet<FormularioDetalle> FormularioDetalles { get; set; }
+        public DbSet<KPTrabajoTipo> KPTrabajoTipos { get; set; }
+        public DbSet<KPFormulario> KPFormularios { get; set; }
+        public DbSet<KPFormularioDetalle> KPFormularioDetalles { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -30,6 +33,10 @@ namespace SegHig.Data
             modelBuilder.Entity<Empleado>().HasIndex("Document", "ClienteId").IsUnique();
             modelBuilder.Entity<Formulario>().HasIndex("Name", "TrabajoTipoId").IsUnique();
             modelBuilder.Entity<FormularioDetalle>().HasIndex("Description", "FormularioId").IsUnique();
+
+            modelBuilder.Entity<KPTrabajoTipo>().HasIndex("Name").IsUnique();
+            modelBuilder.Entity<KPFormulario>().HasIndex("Name", "KPTrabajoTipoId").IsUnique();
+            modelBuilder.Entity<KPFormularioDetalle>().HasIndex("Description", "KPFormularioId").IsUnique();
         }
     }
 }

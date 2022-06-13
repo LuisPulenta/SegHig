@@ -1,18 +1,18 @@
-﻿@model SegHig.Models.KPFormularioDetalleViewModel
+﻿@model SegHig.Models.KPFormularioViewModel
 
 @{
-    ViewData["Title"] = "Detalle";
+    ViewData["Title"] = "Formulario";
     Layout = null;
 }
 
 <flash dismissable="true" />
 
 <div class="container smfont">
-    <form asp-action="AddFormularioDetalle" autocomplete="off" asp-route-id="@Model.Id" onsubmit="return jQueryAjaxPost(this);">
+    <form asp-action="AddFormulario" autocomplete="off" asp-route-id="@Model.Id" onsubmit="return jQueryAjaxPost(this);">
         <div class="box-body">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="KPFormularioId" />
-            <partial name="_FormularioDetalle" />
+            <input type="hidden" asp-for="KPTrabajoTipoId" />
+            <partial name="_Formulario" />
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-sm btn-primary" data-bs-dismiss="modal"><i class="fa fa-ban"></i> Cancelar</button>

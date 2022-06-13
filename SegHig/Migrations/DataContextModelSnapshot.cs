@@ -401,6 +401,102 @@ namespace SegHig.Migrations
                     b.ToTable("FormularioDetalles");
                 });
 
+            modelBuilder.Entity("SegHig.Data.Entities.KPFormulario", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<bool>("Active")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("KPTrabajoTipoId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("Orden")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("KPTrabajoTipoId");
+
+                    b.HasIndex("Name", "KPTrabajoTipoId")
+                        .IsUnique()
+                        .HasFilter("[KPTrabajoTipoId] IS NOT NULL");
+
+                    b.ToTable("KPFormularios");
+                });
+
+            modelBuilder.Entity("SegHig.Data.Entities.KPFormularioDetalle", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<bool>("Active")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<int?>("KPFormularioId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Orden")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Ponderacion")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("KPFormularioId");
+
+                    b.HasIndex("Description", "KPFormularioId")
+                        .IsUnique()
+                        .HasFilter("[KPFormularioId] IS NOT NULL");
+
+                    b.ToTable("KPFormularioDetalles");
+                });
+
+            modelBuilder.Entity("SegHig.Data.Entities.KPTrabajoTipo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<bool>("Active")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("Orden")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("KPTrabajoTipos");
+                });
+
             modelBuilder.Entity("SegHig.Data.Entities.TrabajoTipo", b =>
                 {
                     b.Property<int>("Id")
@@ -639,6 +735,24 @@ namespace SegHig.Migrations
                     b.Navigation("Formulario");
                 });
 
+            modelBuilder.Entity("SegHig.Data.Entities.KPFormulario", b =>
+                {
+                    b.HasOne("SegHig.Data.Entities.KPTrabajoTipo", "KPTrabajoTipo")
+                        .WithMany("KPFormularios")
+                        .HasForeignKey("KPTrabajoTipoId");
+
+                    b.Navigation("KPTrabajoTipo");
+                });
+
+            modelBuilder.Entity("SegHig.Data.Entities.KPFormularioDetalle", b =>
+                {
+                    b.HasOne("SegHig.Data.Entities.KPFormulario", "KPFormulario")
+                        .WithMany("KPFormularioDetalles")
+                        .HasForeignKey("KPFormularioId");
+
+                    b.Navigation("KPFormulario");
+                });
+
             modelBuilder.Entity("SegHig.Data.Entities.TrabajoTipo", b =>
                 {
                     b.HasOne("SegHig.Data.Entities.Cliente", "Cliente")
@@ -681,6 +795,16 @@ namespace SegHig.Migrations
             modelBuilder.Entity("SegHig.Data.Entities.Formulario", b =>
                 {
                     b.Navigation("FormularioDetalles");
+                });
+
+            modelBuilder.Entity("SegHig.Data.Entities.KPFormulario", b =>
+                {
+                    b.Navigation("KPFormularioDetalles");
+                });
+
+            modelBuilder.Entity("SegHig.Data.Entities.KPTrabajoTipo", b =>
+                {
+                    b.Navigation("KPFormularios");
                 });
 
             modelBuilder.Entity("SegHig.Data.Entities.TrabajoTipo", b =>
